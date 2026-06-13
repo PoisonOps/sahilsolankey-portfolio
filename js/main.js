@@ -1336,31 +1336,32 @@ const Sound = (function () {
   let ambientSource = null, ambientGain = null;
   const KEY = 'portfolio_sound';
 
-  function ctx() {
+  function getCtx() {
     if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    /* Chrome suspends AudioContext even after user gesture — must resume explicitly */
+    if (ac.state === 'suspended') ac.resume();
     return ac;
   }
 
-  /* Brown noise ambient — warm, subtle, non-distracting */
+  /* Brown noise through a gentle low-pass — warm hum */
   function startAmbient() {
-    const a = ctx();
-    const seconds = 4;
-    const buf = a.createBuffer(1, a.sampleRate * seconds, a.sampleRate);
+    const a = getCtx();
+    const buf = a.createBuffer(1, a.sampleRate * 4, a.sampleRate);
     const data = buf.getChannelData(0);
     let last = 0;
     for (let i = 0; i < data.length; i++) {
       const w = Math.random() * 2 - 1;
-      data[i] = (last + 0.02 * w) / 1.02 * 3.5;
-      last = data[i];
+      last = (last + 0.02 * w) / 1.02;
+      data[i] = last * 3.5;
     }
 
     const src = a.createBufferSource();
     src.buffer = buf;
-    src.loop   = true;
+    src.loop = true;
 
     const lpf = a.createBiquadFilter();
     lpf.type = 'lowpass';
-    lpf.frequency.value = 180;
+    lpf.frequency.value = 700; /* audible warmth, not muffled */
 
     ambientGain = a.createGain();
     ambientGain.gain.value = 0;
@@ -1371,40 +1372,36 @@ const Sound = (function () {
     src.start();
     ambientSource = src;
 
-    ambientGain.gain.linearRampToValueAtTime(0.055, a.currentTime + 1.8);
+    /* Fade in to 0.15 — clearly audible */
+    ambientGain.gain.linearRampToValueAtTime(0.15, a.currentTime + 1.8);
   }
 
   /* Short key-tap click */
   function synthClick() {
-    const a = ctx();
-    const osc  = a.createOscillator();
-    const gain = a.createGain();
+    const a = getCtx();
+    const osc = a.createOscillator(), gain = a.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(900, a.currentTime);
     osc.frequency.exponentialRampToValueAtTime(350, a.currentTime + 0.04);
-    gain.gain.setValueAtTime(0.035, a.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.06);
-    osc.connect(gain);
-    gain.connect(a.destination);
-    osc.start();
-    osc.stop(a.currentTime + 0.07);
+    gain.gain.setValueAtTime(0.08, a.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.07);
+    osc.connect(gain); gain.connect(a.destination);
+    osc.start(); osc.stop(a.currentTime + 0.08);
   }
 
-  /* Two-tone success chime */
+  /* Two-tone chime on form submit */
   function synthPing() {
-    const a = ctx();
-    [[880, 0], [1320, 0.09]].forEach(([freq, delay]) => {
-      const osc  = a.createOscillator();
-      const gain = a.createGain();
+    const a = getCtx();
+    [[880, 0], [1320, 0.1]].forEach(([freq, delay]) => {
+      const osc = a.createOscillator(), gain = a.createGain();
       osc.type = 'sine';
       osc.frequency.value = freq;
       gain.gain.setValueAtTime(0, a.currentTime + delay);
-      gain.gain.linearRampToValueAtTime(0.04, a.currentTime + delay + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + delay + 0.55);
-      osc.connect(gain);
-      gain.connect(a.destination);
+      gain.gain.linearRampToValueAtTime(0.1, a.currentTime + delay + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + delay + 0.6);
+      osc.connect(gain); gain.connect(a.destination);
       osc.start(a.currentTime + delay);
-      osc.stop(a.currentTime + delay + 0.6);
+      osc.stop(a.currentTime + delay + 0.65);
     });
   }
 
@@ -1412,10 +1409,14 @@ const Sound = (function () {
     toggle() {
       isOn = !isOn;
       if (isOn) {
-        if (!ambientSource) startAmbient();
-        else ambientGain.gain.linearRampToValueAtTime(0.055, ctx().currentTime + 1.5);
+        if (!ambientSource) {
+          startAmbient();
+        } else {
+          getCtx(); /* ensures resume() is called */
+          ambientGain.gain.linearRampToValueAtTime(0.15, ac.currentTime + 1.5);
+        }
       } else {
-        if (ambientGain) ambientGain.gain.linearRampToValueAtTime(0, ctx().currentTime + 0.9);
+        if (ambientGain) ambientGain.gain.linearRampToValueAtTime(0, ac.currentTime + 1);
       }
       localStorage.setItem(KEY, isOn ? 'on' : 'off');
       return isOn;
