@@ -1043,49 +1043,49 @@ function initTileCanvases() {
     { id: 'tile-canvas-5', draw: drawLandingTile },
   ];
 
+  const dpr = Math.min(window.devicePixelRatio, 2);
+
   tileDefs.forEach(def => {
     const wrap = document.getElementById(def.id);
     if (!wrap) return;
 
     const canvas = document.createElement('canvas');
-    const dpr = Math.min(window.devicePixelRatio, 2);
-    const W = wrap.offsetWidth;
-    const H = wrap.offsetHeight;
-
-    canvas.width  = W * dpr;
-    canvas.height = H * dpr;
-    canvas.style.width  = '100%';
-    canvas.style.height = '100%';
-    canvas.style.display = 'block';
-    canvas.style.borderRadius = '10px';
-
-    const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
+    canvas.style.cssText = 'display:block;width:100%;height:100%;border-radius:10px;';
     wrap.appendChild(canvas);
 
+    const ctx = canvas.getContext('2d');
+    let W = 300, H = 169, rafId = null;
     let t = Math.random() * 200;
-    let playing = true;
+
+    function setSize() {
+      W = wrap.offsetWidth  || 300;
+      H = wrap.offsetHeight || 169;
+      canvas.width  = W * dpr;
+      canvas.height = H * dpr;
+      /* Reset transform so scale never accumulates across resizes */
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    setSize();
 
     function draw() {
-      if (!playing) return;
+      rafId = null;
       ctx.clearRect(0, 0, W, H);
       def.draw(ctx, W, H, t);
       t += 0.4;
-      requestAnimationFrame(draw);
+      rafId = requestAnimationFrame(draw);
     }
 
-    draw();
+    /* Only animate when the tile is in the viewport — saves ~360fps off-screen */
+    const io = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        if (!rafId) draw();
+      } else {
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      }
+    }, { rootMargin: '80px' });
+    io.observe(wrap);
 
-    /* Resize handling */
-    const ro = new ResizeObserver(() => {
-      const newW = wrap.offsetWidth;
-      const newH = wrap.offsetHeight;
-      if (newW === 0 || newH === 0) return;
-      canvas.width  = newW * dpr;
-      canvas.height = newH * dpr;
-      ctx.scale(dpr, dpr);
-    });
-    ro.observe(wrap);
+    new ResizeObserver(() => { setSize(); }).observe(wrap);
   });
 }
 

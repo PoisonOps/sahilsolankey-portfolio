@@ -146,14 +146,11 @@
             deployed.classList.toggle('visible', progress >= 0.98);
           }
 
-          /* Spark particles at the fill head */
-          if (window.Scene?.emitSparks && fill) {
-            const fillRect = fill.getBoundingClientRect();
+          /* Spark particles at the fill head (desktop only — needs live camera) */
+          if (!window.SceneState?.isMobile && window.Scene?.camera && fill) {
             const railRect = fill.parentElement.getBoundingClientRect();
             const headX = railRect.left + railRect.width * progress;
             const headY = railRect.top + railRect.height / 2;
-
-            /* Convert to world coords for Three.js */
             const ndcX = (headX / window.innerWidth)  * 2 - 1;
             const ndcY = -(headY / window.innerHeight) * 2 + 1;
             const vec = new THREE.Vector3(ndcX, ndcY, 0.5);
