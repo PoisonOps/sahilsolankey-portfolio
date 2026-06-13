@@ -1090,6 +1090,563 @@ function initTileCanvases() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   PROJECT SCREEN PREVIEWS  (live canvas instead of "coming soon")
+   ═══════════════════════════════════════════════════════════════════ */
+function drawCATalystScreen(ctx, W, H, t) {
+  /* Fix Mode — red-tinted practice interface */
+  ctx.fillStyle = '#070911';
+  ctx.fillRect(0, 0, W, H);
+
+  /* Top status bar */
+  const barH = H * 0.09;
+  const fixGrad = ctx.createLinearGradient(0, 0, W, 0);
+  fixGrad.addColorStop(0, 'rgba(220,38,38,0.22)');
+  fixGrad.addColorStop(1, 'rgba(180,30,30,0.08)');
+  ctx.fillStyle = fixGrad;
+  ctx.fillRect(0, 0, W, barH);
+
+  ctx.fillStyle = 'rgba(248,113,113,0.9)';
+  ctx.font = `bold ${H * 0.042}px JetBrains Mono, monospace`;
+  ctx.fillText('FIX MODE  ■  Phase 1/2', W * 0.05, barH * 0.67);
+
+  /* Progress dots */
+  for (let i = 0; i < 5; i++) {
+    const done = i < 3;
+    ctx.fillStyle = done ? 'rgba(248,113,113,0.9)' : 'rgba(255,255,255,0.12)';
+    ctx.beginPath();
+    ctx.arc(W * (0.7 + i * 0.06), barH * 0.55, H * 0.018, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /* Question card */
+  const cardY = H * 0.12, cardH = H * 0.48;
+  ctx.fillStyle = 'rgba(255,255,255,0.035)';
+  ctx.beginPath();
+  ctx.roundRect(W * 0.04, cardY, W * 0.92, cardH, 8);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(248,113,113,0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(W * 0.04, cardY, W * 0.92, cardH, 8);
+  ctx.stroke();
+
+  /* Subject tag */
+  ctx.fillStyle = 'rgba(59,130,246,0.18)';
+  ctx.beginPath();
+  ctx.roundRect(W * 0.07, cardY + H * 0.03, W * 0.22, H * 0.055, 4);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(147,197,253,0.9)';
+  ctx.font = `${H * 0.034}px JetBrains Mono, monospace`;
+  ctx.fillText('Quant', W * 0.09, cardY + H * 0.065);
+
+  /* Question text lines */
+  const lines = [
+    { w: 0.82, opacity: 0.6 },
+    { w: 0.72, opacity: 0.55 },
+    { w: 0.6,  opacity: 0.5 },
+  ];
+  lines.forEach((l, i) => {
+    ctx.fillStyle = `rgba(233,229,220,${l.opacity})`;
+    ctx.beginPath();
+    ctx.roundRect(W * 0.07, cardY + H * (0.12 + i * 0.09), W * l.w, H * 0.045, 3);
+    ctx.fill();
+  });
+
+  /* Options */
+  const opts = ['A', 'B', 'C', 'D'];
+  opts.forEach((lbl, i) => {
+    const oy = cardY + H * (0.33 + i * 0.095);
+    const selected = i === 2;
+    const isCorrect = i === 1;
+    let bg = 'rgba(255,255,255,0.03)';
+    if (selected) bg = 'rgba(248,113,113,0.18)';
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.roundRect(W * 0.07, oy, W * 0.84, H * 0.075, 5);
+    ctx.fill();
+
+    if (selected) {
+      ctx.strokeStyle = 'rgba(248,113,113,0.5)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.roundRect(W * 0.07, oy, W * 0.84, H * 0.075, 5);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = selected ? 'rgba(248,113,113,0.9)' : 'rgba(255,255,255,0.3)';
+    ctx.font = `bold ${H * 0.038}px JetBrains Mono, monospace`;
+    ctx.fillText(lbl, W * 0.1, oy + H * 0.052);
+
+    ctx.fillStyle = 'rgba(233,229,220,0.4)';
+    ctx.beginPath();
+    ctx.roundRect(W * 0.17, oy + H * 0.016, W * (0.44 + Math.random() * 0), H * 0.042, 2);
+    ctx.fill();
+  });
+
+  /* Mark cost pill */
+  const costPulse = 0.85 + 0.15 * Math.sin(t * 0.04);
+  ctx.fillStyle = `rgba(220,38,38,${costPulse * 0.9})`;
+  ctx.beginPath();
+  ctx.roundRect(W * 0.04, H * 0.63, W * 0.45, H * 0.075, 20);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = `bold ${H * 0.038}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('−1 mark · Fix it now', W * 0.265, H * 0.679);
+  ctx.textAlign = 'left';
+
+  /* Next button */
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.beginPath();
+  ctx.roundRect(W * 0.52, H * 0.63, W * 0.44, H * 0.075, 20);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = `${H * 0.038}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Skip →', W * 0.74, H * 0.679);
+  ctx.textAlign = 'left';
+
+  /* Bottom error insight strip */
+  ctx.fillStyle = 'rgba(255,255,255,0.025)';
+  ctx.fillRect(0, H * 0.78, W, H * 0.22);
+
+  ctx.fillStyle = 'rgba(233,229,220,0.28)';
+  ctx.font = `${H * 0.034}px JetBrains Mono, monospace`;
+  ctx.fillText('Weakest topic: Permutations', W * 0.05, H * 0.84);
+
+  /* Error bars */
+  const errBars = [0.7, 0.45, 0.55, 0.3, 0.6, 0.8, 0.4];
+  errBars.forEach((h, i) => {
+    const bx = W * (0.05 + i * 0.128);
+    const bh = H * 0.1 * h;
+    const by = H * 0.97 - bh;
+    ctx.fillStyle = `rgba(248,113,113,${0.35 + 0.25 * h})`;
+    ctx.beginPath();
+    ctx.roundRect(bx, by, W * 0.1, bh, [2, 2, 0, 0]);
+    ctx.fill();
+  });
+}
+
+function drawGharKhataScreen(ctx, W, H, t) {
+  /* GharKhata — household expense tracker (phone-proportioned) */
+  ctx.fillStyle = '#070d0a';
+  ctx.fillRect(0, 0, W, H);
+
+  /* Header */
+  const headerGrad = ctx.createLinearGradient(0, 0, 0, H * 0.18);
+  headerGrad.addColorStop(0, 'rgba(0,200,83,0.22)');
+  headerGrad.addColorStop(1, 'rgba(0,200,83,0.04)');
+  ctx.fillStyle = headerGrad;
+  ctx.fillRect(0, 0, W, H * 0.18);
+
+  /* Status bar */
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = `${H * 0.032}px JetBrains Mono, monospace`;
+  ctx.fillText('9:41', W * 0.08, H * 0.048);
+
+  /* App name */
+  ctx.fillStyle = 'rgba(0,200,83,0.95)';
+  ctx.font = `bold ${H * 0.058}px Inter, sans-serif`;
+  ctx.fillText('GharKhata', W * 0.07, H * 0.145);
+
+  /* Balance card */
+  const cg = ctx.createLinearGradient(0, H * 0.21, 0, H * 0.41);
+  cg.addColorStop(0, 'rgba(0,200,83,0.28)');
+  cg.addColorStop(1, 'rgba(0,200,83,0.06)');
+  ctx.fillStyle = cg;
+  ctx.beginPath();
+  ctx.roundRect(W * 0.05, H * 0.21, W * 0.9, H * 0.2, 10);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.32)';
+  ctx.font = `${H * 0.032}px JetBrains Mono, monospace`;
+  ctx.fillText('Balance', W * 0.1, H * 0.265);
+
+  /* Animated balance */
+  const balNum = Math.floor(12450 + 50 * Math.sin(t * 0.02));
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.font = `bold ${H * 0.072}px JetBrains Mono, monospace`;
+  ctx.fillText(`₹${balNum.toLocaleString('en-IN')}`, W * 0.1, H * 0.36);
+
+  /* This month chip */
+  const mth = 0.7 + 0.15 * Math.sin(t * 0.015 + 1);
+  ctx.fillStyle = `rgba(0,200,83,${mth * 0.6})`;
+  ctx.beginPath();
+  ctx.roundRect(W * 0.6, H * 0.245, W * 0.32, H * 0.065, 12);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(5,46,22,0.9)';
+  ctx.font = `bold ${H * 0.03}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('↓ ₹2,140', W * 0.76, H * 0.285);
+  ctx.textAlign = 'left';
+
+  /* Expense rows */
+  const expenses = [
+    { label: 'Groceries', amt: '₹840', icon: '🛒', color: 'rgba(232,130,12,0.8)' },
+    { label: 'Dinner',    amt: '₹560', icon: '🍽', color: 'rgba(46,91,255,0.8)' },
+    { label: 'Travel',    amt: '₹320', icon: '🚗', color: 'rgba(139,92,246,0.8)' },
+    { label: 'Coffee',    amt: '₹180', icon: '☕', color: 'rgba(220,38,38,0.7)' },
+  ];
+
+  const highlight = Math.floor(((t * 0.01) % expenses.length));
+  expenses.forEach((e, i) => {
+    const ry = H * (0.44 + i * 0.126);
+    const isHi = i === highlight;
+    ctx.fillStyle = isHi ? 'rgba(0,200,83,0.07)' : 'rgba(255,255,255,0.03)';
+    ctx.beginPath();
+    ctx.roundRect(W * 0.05, ry, W * 0.9, H * 0.1, 6);
+    ctx.fill();
+
+    ctx.fillStyle = e.color;
+    ctx.beginPath();
+    ctx.arc(W * 0.12, ry + H * 0.05, H * 0.025, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+    ctx.font = `${H * 0.036}px Inter, sans-serif`;
+    ctx.fillText(e.label, W * 0.19, ry + H * 0.058);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = `${H * 0.034}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'right';
+    ctx.fillText(e.amt, W * 0.92, ry + H * 0.058);
+    ctx.textAlign = 'left';
+  });
+
+  /* Bottom tab bar */
+  ctx.fillStyle = '#0a0f0c';
+  ctx.fillRect(0, H * 0.9, W, H * 0.1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(0, H * 0.9);
+  ctx.lineTo(W, H * 0.9);
+  ctx.stroke();
+
+  ['⊞', '↗', '⊕', '◷'].forEach((icon, i) => {
+    ctx.fillStyle = i === 0 ? 'rgba(0,200,83,0.9)' : 'rgba(255,255,255,0.2)';
+    ctx.font = `${H * 0.044}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(icon, W * (0.15 + i * 0.23), H * 0.955);
+  });
+  ctx.textAlign = 'left';
+}
+
+function drawPitchReadyScreen(ctx, W, H, t) {
+  /* PitchReady — AI pitch deck builder (phone-proportioned) */
+  ctx.fillStyle = '#080810';
+  ctx.fillRect(0, 0, W, H);
+
+  /* Gradient header */
+  const hg = ctx.createLinearGradient(0, 0, W, H * 0.2);
+  hg.addColorStop(0, 'rgba(255,143,0,0.2)');
+  hg.addColorStop(1, 'rgba(255,143,0,0.03)');
+  ctx.fillStyle = hg;
+  ctx.fillRect(0, 0, W, H * 0.2);
+
+  /* Status bar */
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${H * 0.032}px JetBrains Mono, monospace`;
+  ctx.fillText('9:41', W * 0.08, H * 0.05);
+
+  /* App name + AI badge */
+  ctx.fillStyle = 'rgba(255,143,0,0.95)';
+  ctx.font = `bold ${H * 0.055}px Inter, sans-serif`;
+  ctx.fillText('PitchReady', W * 0.07, H * 0.14);
+
+  ctx.fillStyle = 'rgba(255,143,0,0.2)';
+  ctx.beginPath();
+  ctx.roundRect(W * 0.62, H * 0.105, W * 0.3, H * 0.05, 10);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,143,0,0.85)';
+  ctx.font = `bold ${H * 0.03}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('AI ✦', W * 0.77, H * 0.138);
+  ctx.textAlign = 'left';
+
+  /* Slide thumbnails — 2 col grid */
+  const slides = [
+    { title: 'Problem', active: true },
+    { title: 'Solution', active: false },
+    { title: 'Market', active: false },
+    { title: 'Team', active: false },
+    { title: 'Traction', active: false },
+    { title: 'Ask', active: false },
+  ];
+
+  const cols = 2, rows = 3;
+  const thumbW = (W * 0.86) / cols;
+  const thumbH = (H * 0.48) / rows;
+  const startX = W * 0.07, startY = H * 0.22;
+
+  slides.forEach((s, i) => {
+    const col = i % cols, row = Math.floor(i / cols);
+    const tx = startX + col * (thumbW + W * 0.04);
+    const ty = startY + row * (thumbH + H * 0.025);
+    const isActive = i === Math.floor((t * 0.007) % slides.length);
+
+    ctx.fillStyle = isActive ? 'rgba(255,143,0,0.14)' : 'rgba(255,255,255,0.03)';
+    ctx.strokeStyle = isActive ? 'rgba(255,143,0,0.5)' : 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = isActive ? 1 : 0.5;
+    ctx.beginPath();
+    ctx.roundRect(tx, ty, thumbW - W * 0.02, thumbH - H * 0.01, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    /* Slide number */
+    ctx.fillStyle = isActive ? 'rgba(255,143,0,0.7)' : 'rgba(255,255,255,0.15)';
+    ctx.font = `${H * 0.028}px JetBrains Mono, monospace`;
+    ctx.fillText(`${String(i+1).padStart(2,'0')}`, tx + W * 0.018, ty + H * 0.038);
+
+    /* Title */
+    ctx.fillStyle = isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)';
+    ctx.font = `bold ${H * 0.033}px Inter, sans-serif`;
+    ctx.fillText(s.title, tx + W * 0.018, ty + thumbH - H * 0.02);
+  });
+
+  /* AI suggestion chip */
+  const pulse = 0.8 + 0.2 * Math.sin(t * 0.05);
+  ctx.fillStyle = `rgba(255,143,0,${pulse * 0.9})`;
+  ctx.beginPath();
+  ctx.roundRect(W * 0.07, H * 0.74, W * 0.86, H * 0.08, 20);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(5,5,5,0.9)';
+  ctx.font = `bold ${H * 0.038}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('✦ Generate slide with AI', W / 2, H * 0.792);
+  ctx.textAlign = 'left';
+
+  /* Progress indicator */
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.beginPath();
+  ctx.roundRect(W * 0.07, H * 0.85, W * 0.86, H * 0.04, 10);
+  ctx.fill();
+
+  const prog = ((t * 0.003) % 1);
+  ctx.fillStyle = 'rgba(255,143,0,0.8)';
+  ctx.beginPath();
+  ctx.roundRect(W * 0.07, H * 0.85, W * 0.86 * prog, H * 0.04, 10);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = `${H * 0.03}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText(`${Math.floor(prog * 6) + 1}/6 slides`, W / 2, H * 0.925);
+  ctx.textAlign = 'left';
+}
+
+function drawPostroomScreen(ctx, W, H, t) {
+  /* Postroom Studio — design tool (laptop-proportioned) */
+  ctx.fillStyle = '#080810';
+  ctx.fillRect(0, 0, W, H);
+
+  const sw = W * 0.2; /* left panel */
+  const rw = W * 0.22; /* right panel */
+
+  /* Left panel — layers */
+  ctx.fillStyle = '#0c0e1a';
+  ctx.fillRect(0, 0, sw, H);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(0, 0, sw, H * 0.11);
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.font = `bold ${H * 0.055}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Layers', sw / 2, H * 0.076);
+  ctx.textAlign = 'left';
+
+  const layers = ['Hero text', 'Background', 'Button CTA', 'Nav bar', 'Logo'];
+  layers.forEach((name, i) => {
+    const ly = H * (0.15 + i * 0.12);
+    const isSelected = i === Math.floor((t * 0.008) % layers.length);
+    if (isSelected) {
+      ctx.fillStyle = 'rgba(232,130,12,0.12)';
+      ctx.fillRect(0, ly - H * 0.025, sw, H * 0.09);
+    }
+    ctx.fillStyle = isSelected ? 'rgba(232,130,12,0.9)' : 'rgba(255,255,255,0.18)';
+    ctx.beginPath();
+    ctx.roundRect(sw * 0.08, ly - H * 0.008, sw * 0.12, H * 0.045, 2);
+    ctx.fill();
+    ctx.fillStyle = isSelected ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)';
+    ctx.font = `${H * 0.042}px Inter, sans-serif`;
+    ctx.fillText(name, sw * 0.28, ly + H * 0.03);
+  });
+
+  /* Canvas area */
+  ctx.fillStyle = '#0a0b15';
+  ctx.fillRect(sw, H * 0.11, W - sw - rw, H - H * 0.11);
+
+  /* Grid dots */
+  const spacing = H * 0.08;
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  for (let gx = sw + spacing / 2; gx < W - rw; gx += spacing) {
+    for (let gy = H * 0.11 + spacing / 2; gy < H; gy += spacing) {
+      ctx.beginPath();
+      ctx.arc(gx, gy, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /* Design element — landing page preview */
+  const canvasX = sw + (W - sw - rw) * 0.08;
+  const canvasY = H * 0.17;
+  const canvasW = (W - sw - rw) * 0.84;
+  const canvasH = H * 0.75;
+
+  ctx.fillStyle = 'rgba(5,8,16,0.9)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(canvasX, canvasY, canvasW, canvasH, 6);
+  ctx.fill();
+  ctx.stroke();
+
+  /* Simulated page inside */
+  /* Heading */
+  const headGrad = ctx.createLinearGradient(canvasX, 0, canvasX + canvasW, 0);
+  headGrad.addColorStop(0, 'rgba(233,229,220,0.8)');
+  headGrad.addColorStop(1, 'rgba(232,130,12,0.7)');
+  ctx.fillStyle = headGrad;
+  ctx.font = `bold ${canvasH * 0.11}px DM Serif Display, Georgia, serif`;
+  ctx.fillText('Design.', canvasX + canvasW * 0.08, canvasY + canvasH * 0.2);
+  ctx.fillText('Ship.', canvasX + canvasW * 0.08, canvasY + canvasH * 0.32);
+
+  /* Body lines */
+  [0.44, 0.49, 0.54].forEach((y) => {
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.beginPath();
+    ctx.roundRect(canvasX + canvasW * 0.08, canvasY + canvasH * y, canvasW * 0.58, canvasH * 0.035, 2);
+    ctx.fill();
+  });
+
+  /* CTA button */
+  const ctaBlink = 0.7 + 0.3 * Math.sin(t * 0.05);
+  ctx.fillStyle = `rgba(232,130,12,${ctaBlink})`;
+  ctx.beginPath();
+  ctx.roundRect(canvasX + canvasW * 0.08, canvasY + canvasH * 0.62, canvasW * 0.4, canvasH * 0.1, 24);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(5,5,5,0.9)';
+  ctx.font = `bold ${canvasH * 0.046}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Get Started →', canvasX + canvasW * 0.28, canvasY + canvasH * 0.68);
+  ctx.textAlign = 'left';
+
+  /* Selection handles */
+  ctx.strokeStyle = 'rgba(46,91,255,0.8)';
+  ctx.lineWidth = 1;
+  const selX = canvasX + canvasW * 0.06;
+  const selY = canvasY + canvasH * 0.1;
+  const selW = canvasW * 0.6;
+  const selH = canvasH * 0.28;
+  ctx.strokeRect(selX, selY, selW, selH);
+  [[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]].forEach(([hx, hy]) => {
+    ctx.fillStyle = '#2E5BFF';
+    ctx.fillRect(selX + selW * hx - 3, selY + selH * hy - 3, 6, 6);
+  });
+
+  /* Right panel — properties */
+  ctx.fillStyle = '#0c0e1a';
+  ctx.fillRect(W - rw, 0, rw, H);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(W - rw, 0, rw, H * 0.11);
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.font = `bold ${H * 0.055}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Style', W - rw / 2, H * 0.076);
+  ctx.textAlign = 'left';
+
+  const props = [
+    { label: 'Font', val: 'DM Serif' },
+    { label: 'Size', val: '52px' },
+    { label: 'Weight', val: '700' },
+    { label: 'Color', val: '#E9E5DC' },
+    { label: 'Opacity', val: '100%' },
+  ];
+  props.forEach((p, i) => {
+    const py = H * (0.16 + i * 0.12);
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = `${H * 0.038}px Inter, sans-serif`;
+    ctx.fillText(p.label, W - rw + rw * 0.1, py);
+    ctx.fillStyle = 'rgba(232,130,12,0.8)';
+    ctx.font = `${H * 0.038}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'right';
+    ctx.fillText(p.val, W - rw * 0.08, py);
+    ctx.textAlign = 'left';
+  });
+
+  /* Tool header */
+  ctx.fillStyle = 'rgba(255,255,255,0.07)';
+  ctx.fillRect(sw, 0, W - sw - rw, H * 0.11);
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = `${H * 0.04}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Postroom Studio  ·  index.html', (sw + W - rw) / 2, H * 0.068);
+  ctx.textAlign = 'left';
+
+  /* Zoom controls */
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.beginPath();
+  ctx.roundRect(W - rw - W * 0.13, H * 0.03, W * 0.12, H * 0.055, 4);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${H * 0.032}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('100%  ∨', W - rw - W * 0.07, H * 0.062);
+  ctx.textAlign = 'left';
+}
+
+function initProjectPreviews() {
+  const configs = [
+    { id: 'preview-hero-laptop', draw: drawCATalystScreen },
+    { id: 'preview-hero-phone',  draw: drawGharKhataScreen },
+    { id: 'preview-catalyst',    draw: drawCATalystScreen },
+    { id: 'preview-gharkhata',   draw: drawGharKhataScreen },
+    { id: 'preview-pitchready',  draw: drawPitchReadyScreen },
+    { id: 'preview-postroom',    draw: drawPostroomScreen },
+  ];
+
+  const dpr = Math.min(window.devicePixelRatio, 2);
+
+  configs.forEach(cfg => {
+    const wrap = document.getElementById(cfg.id);
+    if (!wrap) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'display:block;width:100%;height:100%;position:absolute;inset:0;';
+    wrap.style.position = 'relative';
+    wrap.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    let W = 300, H = 200, rafId = null, t = Math.random() * 100;
+
+    function setSize() {
+      W = wrap.offsetWidth  || 300;
+      H = wrap.offsetHeight || 200;
+      canvas.width  = W * dpr;
+      canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    setSize();
+
+    function draw() {
+      rafId = null;
+      ctx.clearRect(0, 0, W, H);
+      cfg.draw(ctx, W, H, t);
+      t += 0.4;
+      rafId = requestAnimationFrame(draw);
+    }
+
+    const io = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) { if (!rafId) draw(); }
+      else { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
+    }, { rootMargin: '100px' });
+    io.observe(wrap);
+
+    new ResizeObserver(() => setSize()).observe(wrap);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    TECH LOGO GRID  (SVG inline logos with brand glow)
    ═══════════════════════════════════════════════════════════════════ */
 const TECH_LOGOS = [
@@ -1552,6 +2109,7 @@ function boot() {
   initHeroGradient();
   initConstellation();
   initTileCanvases();
+  initProjectPreviews();
   initTechLogos();
   initSoundToggle();
   initFAB();
