@@ -1093,869 +1093,795 @@ function initTileCanvases() {
    PROJECT SCREEN PREVIEWS  (live canvas instead of "coming soon")
    ═══════════════════════════════════════════════════════════════════ */
 function drawCATalystScreen(ctx, W, H, t) {
-  /* ── CATalyst Fix Mode ── real question UI, red theme ── */
-  ctx.fillStyle = '#07080f';
+  /* ── CATalyst Fix Mode — laptop 16:10 ── */
+  ctx.fillStyle = '#060810';
   ctx.fillRect(0, 0, W, H);
 
-  const fs = H / 220; /* scale factor */
-  const px = W * 0.045;
+  const fs  = H / 220;
+  const px  = W * 0.05;
+  /* Phase: 0–5s → question visible, 5–9s → wrong answer revealed, 9–14s → insight */
+  const phase = ((t * 0.38) % (14 * 24)) / 24;
+  const revealed = phase >= 5;
 
-  /* Phase cycle: 0-4s question → 4-7s wrong answer revealed → 7-11s insight */
-  const cycle = (t * 0.4) % (11 * 24); /* 24 frames/s equiv */
-  const phase = cycle / 24;
+  /* ── Subtle ambient glow ── */
+  const amb = ctx.createRadialGradient(W * 0.5, 0, 0, W * 0.5, 0, H * 0.7);
+  amb.addColorStop(0, 'rgba(220,38,38,0.07)');
+  amb.addColorStop(1, 'transparent');
+  ctx.fillStyle = amb;
+  ctx.fillRect(0, 0, W, H);
 
-  /* ── Header bar ── */
-  const fixGrad = ctx.createLinearGradient(0, 0, W, 0);
-  fixGrad.addColorStop(0, 'rgba(220,38,38,0.25)');
-  fixGrad.addColorStop(1, 'rgba(180,30,30,0.06)');
-  ctx.fillStyle = fixGrad;
-  ctx.fillRect(0, 0, W, H * 0.11);
+  /* ── Header (0 → H*0.1) ── */
+  const hgrd = ctx.createLinearGradient(0, 0, W, 0);
+  hgrd.addColorStop(0, 'rgba(220,38,38,0.28)');
+  hgrd.addColorStop(1, 'rgba(180,20,20,0.04)');
+  ctx.fillStyle = hgrd;
+  ctx.fillRect(0, 0, W, H * 0.1);
 
+  /* FIX MODE label */
   ctx.fillStyle = 'rgba(248,113,113,0.95)';
-  ctx.font = `bold ${fs * 11}px Inter, sans-serif`;
-  ctx.fillText('FIX MODE', px, H * 0.073);
+  ctx.font = `bold ${fs * 10.5}px Inter, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText('FIX MODE', px, H * 0.05);
 
-  /* Session progress dots */
-  for (let i = 0; i < 5; i++) {
-    const done = i < 3;
-    ctx.fillStyle = done ? 'rgba(248,113,113,0.9)' : 'rgba(255,255,255,0.12)';
-    ctx.beginPath();
-    ctx.arc(W - px - (4 - i) * fs * 14, H * 0.057, fs * 4.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
-  ctx.textAlign = 'right';
-  ctx.fillText('3/5 fixed', W - px - 5 * fs * 14 - 6, H * 0.062);
-  ctx.textAlign = 'left';
-
-  /* ── Subject / type tag ── */
-  ctx.fillStyle = 'rgba(59,130,246,0.18)';
-  ctx.beginPath();
-  ctx.roundRect(px, H * 0.135, fs * 50, fs * 16, 4);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(147,197,253,0.85)';
-  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
-  ctx.fillText('Quant · Permutations', px + fs * 5, H * 0.148);
-
-  ctx.fillStyle = 'rgba(232,130,12,0.18)';
-  ctx.beginPath();
-  ctx.roundRect(px + fs * 56, H * 0.135, fs * 55, fs * 16, 4);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(232,130,12,0.85)';
-  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
-  ctx.fillText('Error type: Concept Gap', px + fs * 61, H * 0.148);
-
-  /* ── Question card ── */
-  const cardY = H * 0.175, cardH = H * 0.345;
-  ctx.fillStyle = 'rgba(255,255,255,0.03)';
-  ctx.strokeStyle = phase >= 4 ? 'rgba(248,113,113,0.25)' : 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 0.8;
-  ctx.beginPath();
-  ctx.roundRect(px, cardY, W - px * 2, cardH, 8);
-  ctx.fill();
-  ctx.stroke();
-
-  /* Question number */
-  ctx.fillStyle = 'rgba(255,255,255,0.18)';
-  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
-  ctx.fillText('Q.07', px + fs * 7, cardY + fs * 14);
-
-  /* Question text — using actual readable copy */
-  ctx.fillStyle = 'rgba(233,229,220,0.82)';
-  ctx.font = `${fs * 10.5}px Inter, sans-serif`;
-  const qLines = [
-    'In how many ways can 3 boys and 3 girls',
-    'be seated in a row so that no two girls',
-    'sit adjacent to each other?',
-  ];
-  qLines.forEach((l, i) => ctx.fillText(l, px + fs * 7, cardY + fs * 28 + i * fs * 14));
-
-  /* ── Options ── */
-  const opts = [
-    { lbl: 'A', txt: '36',   },
-    { lbl: 'B', txt: '72',   correct: true },
-    { lbl: 'C', txt: '144',  wrong: true },
-    { lbl: 'D', txt: '120',  },
-  ];
-  opts.forEach((o, i) => {
-    const oy = cardY + H * 0.14 + i * H * 0.048;
-    const selected = o.wrong && phase >= 3;
-    const revealed = phase >= 4;
-
-    let bg = 'rgba(255,255,255,0.025)';
-    let border = 'rgba(255,255,255,0.06)';
-    let textColor = 'rgba(233,229,220,0.55)';
-
-    if (selected)                     { bg = 'rgba(220,38,38,0.15)'; border = 'rgba(248,113,113,0.45)'; textColor = 'rgba(248,113,113,0.9)'; }
-    if (revealed && o.correct)        { bg = 'rgba(34,197,94,0.1)';  border = 'rgba(74,222,128,0.45)';  textColor = 'rgba(74,222,128,0.9)'; }
-
-    ctx.fillStyle = bg;
-    ctx.strokeStyle = border;
-    ctx.lineWidth = 0.8;
-    ctx.beginPath();
-    ctx.roundRect(px, oy, W - px * 2, H * 0.039, 5);
-    ctx.fill();
-    ctx.stroke();
-
-    /* Label circle */
-    ctx.fillStyle = selected ? 'rgba(248,113,113,0.85)' : (revealed && o.correct ? 'rgba(74,222,128,0.85)' : 'rgba(255,255,255,0.12)');
-    ctx.beginPath();
-    ctx.arc(px + fs * 12, oy + H * 0.0195, fs * 7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = selected || (revealed && o.correct) ? '#060810' : 'rgba(255,255,255,0.4)';
-    ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(o.lbl, px + fs * 12, oy + H * 0.0245);
-    ctx.textAlign = 'left';
-
-    /* Answer text */
-    ctx.fillStyle = textColor;
-    ctx.font = `${fs * 10.5}px Inter, sans-serif`;
-    ctx.fillText(o.txt, px + fs * 24, oy + H * 0.026);
-
-    /* ✗ or ✓ reveal */
-    if (revealed && (o.correct || o.wrong)) {
-      ctx.fillStyle = o.correct ? 'rgba(74,222,128,0.85)' : 'rgba(248,113,113,0.85)';
-      ctx.font = `bold ${fs * 11}px sans-serif`;
-      ctx.textAlign = 'right';
-      ctx.fillText(o.correct ? '✓' : '✗', W - px - fs * 4, oy + H * 0.026);
-      ctx.textAlign = 'left';
-    }
-  });
-
-  /* ── Mark cost + action bar ── */
-  const abY = cardY + cardH + H * 0.018;
-  const pulse = 0.8 + 0.2 * Math.sin(t * 0.08);
-  ctx.fillStyle = `rgba(220,38,38,${pulse * 0.88})`;
-  ctx.beginPath();
-  ctx.roundRect(px, abY, W * 0.48 - px, H * 0.065, 20);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.font = `bold ${fs * 10}px Inter, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText('−1 mark · Fix this now', px + (W * 0.48 - px) / 2, abY + H * 0.042);
-  ctx.textAlign = 'left';
-
-  ctx.fillStyle = 'rgba(255,255,255,0.05)';
-  ctx.beginPath();
-  ctx.roundRect(W * 0.5, abY, W * 0.5 - px, H * 0.065, 20);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth = 0.6;
-  ctx.beginPath();
-  ctx.roundRect(W * 0.5, abY, W * 0.5 - px, H * 0.065, 20);
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.font = `${fs * 10}px Inter, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText('Next →', W * 0.5 + (W * 0.5 - px) / 2, abY + H * 0.042);
-  ctx.textAlign = 'left';
-
-  /* ── Insight strip ── */
-  const insight = phase >= 7;
-  const insightAlpha = Math.min(1, (phase - 7) / 1.2);
-  if (insight) {
-    const iy = abY + H * 0.082;
-    ctx.globalAlpha = insightAlpha;
-    ctx.fillStyle = 'rgba(255,255,255,0.02)';
-    ctx.fillRect(0, iy, W, H - iy);
-
-    ctx.fillStyle = 'rgba(248,113,113,0.7)';
-    ctx.font = `bold ${fs * 9.5}px JetBrains Mono, monospace`;
-    ctx.fillText('You\'ve made this error 3 times.', px, iy + H * 0.038);
-
-    /* Mini bar chart */
-    [0.55, 0.8, 0.45, 0.7, 0.9, 0.6, 0.75].forEach((bh, i) => {
-      const bx = px + i * (W - px * 2) / 7;
-      const bH = H * 0.06 * bh;
-      const by = H * 0.97 - bH;
-      ctx.fillStyle = `rgba(248,113,113,${0.3 + 0.4 * bh})`;
-      ctx.beginPath();
-      ctx.roundRect(bx, by, (W - px * 2) / 7 - 3, bH, [2, 2, 0, 0]);
-      ctx.fill();
-    });
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
-    ctx.textAlign = 'right';
-    ctx.fillText('Last 7 days', W - px, iy + H * 0.038);
-    ctx.textAlign = 'left';
-    ctx.globalAlpha = 1;
-  }
-
-  /* Timer */
-  const timeLeft = Math.max(0, 90 - Math.floor(t * 0.013) % 90);
+  /* Timer — top right */
+  const timeLeft = Math.max(0, 90 - Math.floor(t * 0.012) % 90);
   const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0');
   const ss = String(timeLeft % 60).padStart(2, '0');
-  ctx.fillStyle = timeLeft < 20 ? 'rgba(248,113,113,0.7)' : 'rgba(255,255,255,0.18)';
-  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
+  ctx.fillStyle = timeLeft < 20 ? 'rgba(248,113,113,0.8)' : 'rgba(255,255,255,0.22)';
+  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
   ctx.textAlign = 'right';
-  ctx.fillText(`${mm}:${ss}`, W - px, H * 0.073);
+  ctx.fillText(`${mm}:${ss}`, W - px, H * 0.036);
   ctx.textAlign = 'left';
 
-  /* Status bar time */
-  ctx.fillStyle = 'rgba(255,255,255,0.0)'; /* invisible bg already black */
-  const barH = H * 0.11;
-  ctx.fillStyle = 'rgba(255,255,255,0.08)';
-  ctx.fillRect(0, 0, W, H * 0.0);
+  /* Session dots — top right */
+  for (let i = 0; i < 5; i++) {
+    ctx.fillStyle = i < 3 ? 'rgba(248,113,113,0.85)' : 'rgba(255,255,255,0.1)';
+    ctx.beginPath();
+    ctx.arc(W - px - (4 - i) * fs * 12, H * 0.073, fs * 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.textBaseline = 'alphabetic';
 
-  /* Fix mode phase label */
-  ctx.fillStyle = 'rgba(255,255,255,0.2)';
-  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+  /* ── Tag row (H*0.1 → H*0.148) ── */
+  const tagH = H * 0.04;
+  const tagY  = H * 0.108;
+  [
+    { text: 'Quant · Permutations', bg: 'rgba(59,130,246,0.13)', color: 'rgba(147,197,253,0.82)' },
+    { text: 'Concept Gap',          bg: 'rgba(232,130,12,0.13)', color: 'rgba(232,170,80,0.82)'  },
+  ].reduce((x, tag) => {
+    ctx.font = `${fs * 8.8}px JetBrains Mono, monospace`;
+    const tw = ctx.measureText(tag.text).width;
+    ctx.fillStyle = tag.bg;
+    ctx.beginPath(); ctx.roundRect(x, tagY, tw + fs * 10, tagH, 3); ctx.fill();
+    ctx.fillStyle = tag.color;
+    ctx.fillText(tag.text, x + fs * 5, tagY + tagH * 0.68);
+    return x + tw + fs * 16;
+  }, px);
+
+  /* ── Question card (H*0.155 → dynamic bottom) ── */
+  const cardY = H * 0.155;
+  const qFont = `${fs * 9.8}px Inter, sans-serif`;
+  const qLineH = H * 0.04;
+  const qLines = [
+    'In how many ways can 3 boys and',
+    '3 girls sit in a row such that no',
+    'two girls are adjacent?',
+  ];
+  /* Calculate card height based on content */
+  const qBlockH  = qLines.length * qLineH;
+  const optH     = H * 0.058;
+  const optGap   = H * 0.007;
+  const optBlock = 4 * optH + 3 * optGap;
+  const cardPad  = H * 0.022;
+  const qNumH    = H * 0.032;
+  const gapQOpts = H * 0.018;
+  const cardH    = cardPad + qNumH + qBlockH + gapQOpts + optBlock + cardPad;
+
+  ctx.fillStyle = revealed ? 'rgba(220,38,38,0.04)' : 'rgba(255,255,255,0.02)';
+  ctx.strokeStyle = revealed ? 'rgba(248,113,113,0.18)' : 'rgba(255,255,255,0.055)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.roundRect(px, cardY, W - px * 2, cardH, 7); ctx.fill(); ctx.stroke();
+
+  /* Q number */
+  let cy = cardY + cardPad;
+  ctx.fillStyle = 'rgba(255,255,255,0.16)';
+  ctx.font = `${fs * 8}px JetBrains Mono, monospace`;
+  ctx.fillText('Q.07 · 3 marks', px + fs * 7, cy + qNumH * 0.8);
+  cy += qNumH;
+
+  /* Question text */
+  ctx.fillStyle = 'rgba(233,229,220,0.82)';
+  ctx.font = qFont;
+  qLines.forEach(l => { ctx.fillText(l, px + fs * 7, cy + qLineH * 0.8); cy += qLineH; });
+  cy += gapQOpts;
+
+  /* Options */
+  const opts = [
+    { lbl: 'A', txt: '36'  },
+    { lbl: 'B', txt: '72',  correct: true },
+    { lbl: 'C', txt: '144', wrong: true },
+    { lbl: 'D', txt: '120' },
+  ];
+  opts.forEach(o => {
+    const selected = o.wrong && phase >= 4;
+    let bg = 'rgba(255,255,255,0.02)', border = 'rgba(255,255,255,0.05)', tc = 'rgba(233,229,220,0.48)';
+    if (selected)            { bg = 'rgba(220,38,38,0.13)';  border = 'rgba(248,113,113,0.38)'; tc = 'rgba(248,113,113,0.88)'; }
+    if (revealed && o.correct){ bg = 'rgba(34,197,94,0.08)'; border = 'rgba(74,222,128,0.38)';  tc = 'rgba(74,222,128,0.88)'; }
+
+    ctx.fillStyle = bg; ctx.strokeStyle = border; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.roundRect(px + fs * 4, cy, W - px * 2 - fs * 8, optH, 5); ctx.fill(); ctx.stroke();
+
+    /* Circle label */
+    const cx2 = px + fs * 18, cy2 = cy + optH / 2;
+    ctx.fillStyle = selected ? 'rgba(248,113,113,0.8)' : (revealed && o.correct ? 'rgba(74,222,128,0.8)' : 'rgba(255,255,255,0.09)');
+    ctx.beginPath(); ctx.arc(cx2, cy2, fs * 6.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = (selected || (revealed && o.correct)) ? '#060810' : 'rgba(255,255,255,0.35)';
+    ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+    ctx.fillText(o.lbl, cx2, cy2);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+    /* Answer text */
+    ctx.fillStyle = tc;
+    ctx.font = `${fs * 9.8}px Inter, sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(o.txt, px + fs * 30, cy + optH / 2);
+
+    /* ✓ / ✗ */
+    if (revealed && (o.correct || o.wrong)) {
+      ctx.fillStyle = o.correct ? 'rgba(74,222,128,0.88)' : 'rgba(248,113,113,0.78)';
+      ctx.font = `bold ${fs * 10}px sans-serif`;
+      ctx.textAlign = 'right';
+      ctx.fillText(o.correct ? '✓' : '✗', W - px - fs * 10, cy + optH / 2);
+      ctx.textAlign = 'left';
+    }
+    ctx.textBaseline = 'alphabetic';
+    cy += optH + optGap;
+  });
+  cy += cardPad;
+
+  /* ── Action bar (directly below card, H*0.07 tall) ── */
+  const abY = cy + H * 0.014;
+  const abH = H * 0.072;
+  const pulse = 0.78 + 0.22 * Math.sin(t * 0.09);
+  const halfW = (W - px * 2 - fs * 6) / 2;
+
+  ctx.fillStyle = `rgba(220,38,38,${pulse * 0.92})`;
+  ctx.beginPath(); ctx.roundRect(px, abY, halfW, abH, abH / 2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+  ctx.fillText('−1 mark · Fix this now', px + halfW / 2, abY + abH / 2);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 0.6;
+  ctx.beginPath(); ctx.roundRect(px + halfW + fs * 6, abY, halfW, abH, abH / 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${fs * 9}px Inter, sans-serif`;
+  ctx.fillText('Next question →', px + halfW * 1.5 + fs * 6, abY + abH / 2);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+  /* ── Insight strip — ALWAYS visible, fades in ── */
+  const iy = abY + abH + H * 0.018;
+  const insightAlpha = phase >= 9 ? Math.min(1, (phase - 9) / 2) : 0.3;
+  ctx.globalAlpha = insightAlpha;
+
+  ctx.fillStyle = 'rgba(255,255,255,0.015)';
+  ctx.fillRect(0, iy, W, H - iy);
+
+  /* Top label row */
+  ctx.fillStyle = 'rgba(248,113,113,0.72)';
+  ctx.font = `bold ${fs * 8.5}px JetBrains Mono, monospace`;
+  ctx.fillText('Error pattern: 3× this week', px, iy + H * 0.042);
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.font = `${fs * 7.8}px JetBrains Mono, monospace`;
   ctx.textAlign = 'right';
-  ctx.fillText('Phase 1 / 2', W - px - fs * 60, H * 0.073);
+  ctx.fillText('Permutations', W - px, iy + H * 0.042);
   ctx.textAlign = 'left';
+
+  /* Bar chart */
+  const bars = [0.45, 0.72, 0.38, 0.85, 0.55, 0.9, 0.6];
+  const chartH  = H - iy - H * 0.08;
+  const chartY  = iy + H * 0.06;
+  const bW      = (W - px * 2) / bars.length - fs * 3;
+  bars.forEach((bh, i) => {
+    const bx  = px + i * ((W - px * 2) / bars.length);
+    const bHH = chartH * bh;
+    const by  = chartY + chartH - bHH;
+    ctx.fillStyle = `rgba(248,113,113,${0.22 + 0.5 * bh})`;
+    ctx.beginPath(); ctx.roundRect(bx, by, bW, bHH, [2, 2, 0, 0]); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.font = `${fs * 7}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText(['M','T','W','T','F','S','S'][i], bx + bW / 2, chartY + chartH + H * 0.032);
+  });
+  ctx.textAlign = 'left';
+  ctx.globalAlpha = 1;
 }
 
 function drawGharKhataScreen(ctx, W, H, t) {
-  /* ── GharKhata — shared expense tracker, phone UI ── */
-  ctx.fillStyle = '#06100a';
+  /* ── GharKhata — shared expense tracker, phone 9:19.5 ── */
+  ctx.fillStyle = '#040d07';
   ctx.fillRect(0, 0, W, H);
 
-  const fs = H / 380; /* scale factor for phone-proportioned canvas */
-  const px = W * 0.055;
+  const fs = H / 420;
+  const px = W * 0.06;
+  const tabH = H * 0.085;
+  const safe = H - tabH; /* usable height above tab bar */
 
-  /* Status bar */
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
-  ctx.fillText('9:41', px, H * 0.04);
+  /* Ambient green glow */
+  const amb = ctx.createRadialGradient(W * 0.5, 0, 0, W * 0.5, 0, H * 0.55);
+  amb.addColorStop(0, 'rgba(0,200,83,0.12)');
+  amb.addColorStop(1, 'transparent');
+  ctx.fillStyle = amb;
+  ctx.fillRect(0, 0, W, H);
+
+  /* ── Status bar ── */
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(255,255,255,0.32)';
+  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+  ctx.fillText('9:41', px, H * 0.026);
+  const syncPulse = 0.5 + 0.5 * Math.abs(Math.sin(t * 0.055));
+  ctx.fillStyle = `rgba(0,200,83,${syncPulse * 0.7})`;
+  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
   ctx.textAlign = 'right';
-  ctx.fillStyle = 'rgba(0,200,83,0.5)';
-  ctx.fillText('● online', W - px, H * 0.04);
+  ctx.fillText('⟳ synced', W - px, H * 0.026);
   ctx.textAlign = 'left';
 
-  /* Header gradient */
-  const hg = ctx.createLinearGradient(0, 0, 0, H * 0.19);
-  hg.addColorStop(0, 'rgba(0,200,83,0.2)');
-  hg.addColorStop(1, 'transparent');
-  ctx.fillStyle = hg;
-  ctx.fillRect(0, 0, W, H * 0.19);
+  /* ── Header (H*0.04 → H*0.13) ── */
+  ctx.fillStyle = 'rgba(0,200,83,0.92)';
+  ctx.font = `bold ${fs * 17}px Inter, sans-serif`;
+  ctx.fillText('GharKhata', px, H * 0.088);
 
-  /* App name + avatar pair row */
-  ctx.fillStyle = 'rgba(0,200,83,0.95)';
-  ctx.font = `bold ${fs * 16}px Inter, sans-serif`;
-  ctx.fillText('GharKhata', px, H * 0.115);
-
-  /* Avatar pair — Sahil + Priya */
+  /* Avatars */
   ['#e8820c', '#2E5BFF'].forEach((c, i) => {
     ctx.fillStyle = c;
     ctx.beginPath();
-    ctx.arc(W - px - (1 - i) * fs * 20, H * 0.09, fs * 10, 0, Math.PI * 2);
+    ctx.arc(W - px - (1 - i) * fs * 22, H * 0.08, fs * 10, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(i === 0 ? 'S' : 'P', W - px - (1 - i) * fs * 22, H * 0.08);
+    ctx.textAlign = 'left';
   });
-
-  /* Month label */
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
-  ctx.fillText('June 2026', px, H * 0.155);
-
-  /* ── Balance card ── */
-  const cardY = H * 0.19;
-  const cg = ctx.createLinearGradient(0, cardY, 0, cardY + H * 0.21);
-  cg.addColorStop(0, 'rgba(0,200,83,0.2)');
-  cg.addColorStop(1, 'rgba(0,200,83,0.04)');
-  ctx.fillStyle = cg;
-  ctx.strokeStyle = 'rgba(0,200,83,0.18)';
-  ctx.lineWidth = 0.8;
-  ctx.beginPath();
-  ctx.roundRect(px, cardY, W - px * 2, H * 0.21, 10);
-  ctx.fill();
-  ctx.stroke();
-
-  /* Balance label + number */
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
-  ctx.fillText('Net Balance', px + fs * 8, cardY + H * 0.046);
-
-  const balAnim = Math.floor(12450 + 18 * Math.sin(t * 0.018));
-  ctx.fillStyle = 'rgba(255,255,255,0.93)';
-  ctx.font = `bold ${fs * 20}px Inter, sans-serif`;
-  ctx.fillText(`₹${balAnim.toLocaleString('en-IN')}`, px + fs * 8, cardY + H * 0.125);
-
-  /* Income / Expense chips */
-  [
-    { label: '↑ Income', val: '₹18,000', color: 'rgba(0,200,83,0.8)', x: 0 },
-    { label: '↓ Spent',  val: '₹5,550',  color: 'rgba(248,113,113,0.75)', x: 0.5 },
-  ].forEach(chip => {
-    const cx = px + fs * 8 + (W - px * 2 - fs * 16) * chip.x;
-    ctx.fillStyle = chip.color;
-    ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
-    ctx.fillText(chip.label, cx, cardY + H * 0.166);
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.font = `bold ${fs * 10.5}px JetBrains Mono, monospace`;
-    ctx.fillText(chip.val, cx, cardY + H * 0.193);
-  });
-
-  /* ── Budget progress bar ── */
-  const progY = cardY + H * 0.225;
-  ctx.fillStyle = 'rgba(255,255,255,0.03)';
-  ctx.beginPath();
-  ctx.roundRect(px, progY, W - px * 2, H * 0.032, 8);
-  ctx.fill();
-
-  const spent = 5550, budget = 12000;
-  const prog = spent / budget;
-  const barGrad = ctx.createLinearGradient(px, 0, px + (W - px * 2) * prog, 0);
-  barGrad.addColorStop(0, 'rgba(0,200,83,0.85)');
-  barGrad.addColorStop(1, 'rgba(232,130,12,0.7)');
-  ctx.fillStyle = barGrad;
-  ctx.beginPath();
-  ctx.roundRect(px, progY, (W - px * 2) * prog, H * 0.032, 8);
-  ctx.fill();
 
   ctx.fillStyle = 'rgba(255,255,255,0.22)';
   ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
-  ctx.fillText(`Budget: ₹${spent.toLocaleString('en-IN')} / ₹${budget.toLocaleString('en-IN')}`, px, progY + H * 0.052);
+  ctx.fillText('June 2026', px, H * 0.117);
 
-  /* ── Recent transactions ── */
-  const txY = progY + H * 0.07;
-  ctx.fillStyle = 'rgba(255,255,255,0.12)';
-  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
-  ctx.fillText('RECENT', px, txY);
+  /* ── Balance card (H*0.135 → H*0.355) ── */
+  const cY = H * 0.135, cH = H * 0.22;
+  const cg = ctx.createLinearGradient(0, cY, 0, cY + cH);
+  cg.addColorStop(0, 'rgba(0,200,83,0.22)');
+  cg.addColorStop(1, 'rgba(0,200,83,0.03)');
+  ctx.fillStyle = cg;
+  ctx.strokeStyle = 'rgba(0,200,83,0.2)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.roundRect(px, cY, W - px * 2, cH, 10); ctx.fill(); ctx.stroke();
 
-  /* Animated "new sync" indicator */
-  const syncPulse = 0.5 + 0.5 * Math.abs(Math.sin(t * 0.06));
-  ctx.fillStyle = `rgba(0,200,83,${syncPulse * 0.8})`;
-  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
-  ctx.textAlign = 'right';
-  ctx.fillText('⟳ synced just now', W - px, txY);
-  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+  ctx.fillText('Net Balance', px + fs * 7, cY + cH * 0.22);
+
+  const balAnim = Math.floor(12449 + 12 * Math.sin(t * 0.018));
+  ctx.fillStyle = 'rgba(255,255,255,0.94)';
+  ctx.font = `bold ${fs * 21}px Inter, sans-serif`;
+  ctx.fillText(`₹${balAnim.toLocaleString('en-IN')}`, px + fs * 7, cY + cH * 0.55);
+
+  /* Income / Spent chips */
+  const chipW = (W - px * 2 - fs * 6) / 2;
+  [
+    { label: '↑ Income', val: '₹18,000', color: 'rgba(0,200,83,0.82)' },
+    { label: '↓ Spent',  val: '₹5,551',  color: 'rgba(248,113,113,0.72)' },
+  ].forEach((chip, i) => {
+    const cx2 = px + fs * 7 + (chipW + fs * 6) * i;
+    ctx.fillStyle = chip.color;
+    ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+    ctx.fillText(chip.label, cx2, cY + cH * 0.73);
+    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+    ctx.font = `bold ${fs * 10}px JetBrains Mono, monospace`;
+    ctx.fillText(chip.val, cx2, cY + cH * 0.92);
+  });
+
+  /* ── Budget bar (H*0.365 → H*0.41) ── */
+  const bpY = cY + cH + H * 0.018;
+  ctx.fillStyle = 'rgba(255,255,255,0.055)';
+  ctx.beginPath(); ctx.roundRect(px, bpY, W - px * 2, H * 0.024, 6); ctx.fill();
+  const prog = 5551 / 12000;
+  const bg2 = ctx.createLinearGradient(px, 0, px + (W - px * 2) * prog, 0);
+  bg2.addColorStop(0, 'rgba(0,200,83,0.85)');
+  bg2.addColorStop(1, 'rgba(232,130,12,0.72)');
+  ctx.fillStyle = bg2;
+  ctx.beginPath(); ctx.roundRect(px, bpY, (W - px * 2) * prog, H * 0.024, 6); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.font = `${fs * 7.8}px JetBrains Mono, monospace`;
+  ctx.fillText('₹5,551 of ₹12,000 budget', px, bpY + H * 0.044);
+
+  /* ── Transactions (3 rows, fits above tab bar) ── */
+  const txLabelY = bpY + H * 0.066;
+  ctx.fillStyle = 'rgba(255,255,255,0.14)';
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.fillText('RECENT', px, txLabelY);
+
+  /* Compute available space: safe - txLabelY - gap */
+  const txAreaTop = txLabelY + H * 0.025;
+  const txAreaH   = safe - txAreaTop - H * 0.01;
+  const txCount   = 3;
+  const rowH      = txAreaH / txCount - H * 0.008;
 
   const tx = [
-    { who: 'Sahil',  name: 'Zomato Dinner',    amt: '-₹560',  c: '#e8820c', sign: -1 },
-    { who: 'Priya',  name: 'Grocery store',     amt: '-₹840',  c: '#2E5BFF', sign: -1 },
-    { who: 'Sahil',  name: 'Petrol',            amt: '-₹320',  c: '#e8820c', sign: -1 },
-    { who: 'Priya',  name: 'Coffee & snacks',   amt: '-₹180',  c: '#2E5BFF', sign: -1 },
+    { who: 'S', name: 'Zomato Dinner',  amt: '-₹560',  c: '#e8820c' },
+    { who: 'P', name: 'Grocery store',  amt: '-₹840',  c: '#2E5BFF' },
+    { who: 'S', name: 'Petrol',         amt: '-₹320',  c: '#e8820c' },
   ];
+  const newRow = Math.floor((t * 0.004) % txCount);
 
-  const newRow = Math.floor((t * 0.005) % tx.length);
   tx.forEach((e, i) => {
-    const ry = txY + H * 0.052 + i * H * 0.107;
+    const ry = txAreaTop + i * (rowH + H * 0.008);
     const isNew = i === newRow;
-    const rowAlpha = isNew ? 1 : 0.8;
+    ctx.globalAlpha = isNew ? 1 : 0.78;
+    ctx.fillStyle = isNew ? 'rgba(0,200,83,0.07)' : 'rgba(255,255,255,0.025)';
+    ctx.strokeStyle = isNew ? 'rgba(0,200,83,0.18)' : 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.roundRect(px, ry, W - px * 2, rowH, 7); ctx.fill(); ctx.stroke();
 
-    ctx.globalAlpha = rowAlpha;
-    ctx.fillStyle = isNew ? 'rgba(0,200,83,0.06)' : 'rgba(255,255,255,0.028)';
-    ctx.beginPath();
-    ctx.roundRect(px, ry, W - px * 2, H * 0.092, 6);
-    ctx.fill();
-
-    /* Avatar initial */
+    /* Avatar */
     ctx.fillStyle = e.c;
-    ctx.beginPath();
-    ctx.arc(px + fs * 13, ry + H * 0.046, fs * 11, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(px + rowH * 0.42, ry + rowH / 2, rowH * 0.33, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#fff';
-    ctx.font = `bold ${fs * 10}px Inter, sans-serif`;
+    ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(e.who[0], px + fs * 13, ry + H * 0.051);
+    ctx.fillText(e.who, px + rowH * 0.42, ry + rowH / 2);
     ctx.textAlign = 'left';
 
-    /* Name and who paid */
-    ctx.fillStyle = 'rgba(255,255,255,0.78)';
-    ctx.font = `${fs * 10.5}px Inter, sans-serif`;
-    ctx.fillText(e.name, px + fs * 30, ry + H * 0.038);
-    ctx.fillStyle = 'rgba(255,255,255,0.28)';
-    ctx.font = `${fs * 8.5}px Inter, sans-serif`;
-    ctx.fillText(`Paid by ${e.who}`, px + fs * 30, ry + H * 0.066);
+    /* Name */
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.font = `${fs * 9.8}px Inter, sans-serif`;
+    ctx.fillText(e.name, px + rowH * 0.88, ry + rowH * 0.42);
 
     /* Amount */
-    ctx.fillStyle = 'rgba(248,113,113,0.75)';
-    ctx.font = `bold ${fs * 10.5}px JetBrains Mono, monospace`;
+    ctx.fillStyle = 'rgba(248,113,113,0.78)';
+    ctx.font = `bold ${fs * 9.8}px JetBrains Mono, monospace`;
     ctx.textAlign = 'right';
-    ctx.fillText(e.amt, W - px, ry + H * 0.05);
-    ctx.textAlign = 'left';
-
+    ctx.fillText(e.amt, W - px, ry + rowH * 0.42);
     if (isNew) {
-      ctx.fillStyle = 'rgba(0,200,83,0.7)';
+      ctx.fillStyle = 'rgba(0,200,83,0.72)';
       ctx.font = `${fs * 7.5}px JetBrains Mono, monospace`;
-      ctx.textAlign = 'right';
-      ctx.fillText('NEW', W - px, ry + H * 0.073);
-      ctx.textAlign = 'left';
+      ctx.fillText('NEW', W - px, ry + rowH * 0.72);
     }
-
+    ctx.textAlign = 'left';
     ctx.globalAlpha = 1;
   });
 
   /* ── Tab bar ── */
-  ctx.fillStyle = 'rgba(6,16,10,0.95)';
-  ctx.fillRect(0, H * 0.918, W, H * 0.082);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = 'rgba(4,13,7,0.97)';
+  ctx.fillRect(0, safe, W, tabH);
   ctx.strokeStyle = 'rgba(0,200,83,0.08)';
   ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(0, H * 0.918);
-  ctx.lineTo(W, H * 0.918);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, safe); ctx.lineTo(W, safe); ctx.stroke();
 
-  const tabs = [
-    { label: 'Home', active: true  },
-    { label: 'Split', active: false },
-    { label: 'Add',  active: false },
-    { label: 'Stats', active: false },
-  ];
-  tabs.forEach((tab, i) => {
+  ctx.textBaseline = 'middle';
+  ['Home', 'Split', '+', 'Stats'].forEach((lbl, i) => {
     const tx2 = W * (0.125 + i * 0.25);
-    if (tab.label === 'Add') {
+    if (lbl === '+') {
       ctx.fillStyle = 'rgba(0,200,83,0.9)';
-      ctx.beginPath();
-      ctx.arc(tx2, H * 0.958, fs * 12, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(tx2, safe + tabH / 2, fs * 12, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#fff';
-      ctx.font = `bold ${fs * 14}px Inter, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText('+', tx2, H * 0.963);
+      ctx.font = `bold ${fs * 15}px Inter, sans-serif`;
     } else {
-      ctx.fillStyle = tab.active ? 'rgba(0,200,83,0.85)' : 'rgba(255,255,255,0.22)';
+      ctx.fillStyle = i === 0 ? 'rgba(0,200,83,0.88)' : 'rgba(255,255,255,0.22)';
       ctx.font = `${fs * 8.5}px Inter, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText(tab.label, tx2, H * 0.963);
     }
+    ctx.textAlign = 'center';
+    ctx.fillText(lbl, tx2, safe + tabH / 2);
   });
   ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
 }
 
 function drawPitchReadyScreen(ctx, W, H, t) {
-  /* ── PitchReady — cricket performance tracker, phone UI ── */
-  ctx.fillStyle = '#060810';
+  /* ── PitchReady — cricket tracker, phone 9:19.5 ── */
+  ctx.fillStyle = '#05060e';
   ctx.fillRect(0, 0, W, H);
 
-  const fs = H / 380;
-  const px = W * 0.055;
-  const accent = '#FF8F00';
+  const fs  = H / 420;
+  const px  = W * 0.06;
+  const acc = '#FF8F00';
+  const tabH = H * 0.085;
+  const safe  = H - tabH;
 
-  /* Ambient background glow */
-  const bg = ctx.createRadialGradient(W * 0.5, H * 0.25, 0, W * 0.5, H * 0.25, H * 0.5);
-  bg.addColorStop(0, 'rgba(255,143,0,0.07)');
-  bg.addColorStop(1, 'transparent');
-  ctx.fillStyle = bg;
+  /* Ambient warm glow top */
+  const amb = ctx.createRadialGradient(W * 0.5, 0, 0, W * 0.5, 0, H * 0.5);
+  amb.addColorStop(0, 'rgba(255,143,0,0.1)');
+  amb.addColorStop(1, 'transparent');
+  ctx.fillStyle = amb;
   ctx.fillRect(0, 0, W, H);
 
-  /* Status bar */
+  /* ── Status bar ── */
+  ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(255,255,255,0.28)';
   ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
-  ctx.fillText('9:41', px, H * 0.038);
+  ctx.fillText('9:41', px, H * 0.026);
+  ctx.fillStyle = `rgba(255,143,0,0.5)`;
   ctx.textAlign = 'right';
-  ctx.fillStyle = 'rgba(255,143,0,0.45)';
-  ctx.fillText('PitchReady', W - px, H * 0.038);
+  ctx.fillText('PitchReady', W - px, H * 0.026);
   ctx.textAlign = 'left';
 
-  /* Header */
-  ctx.fillStyle = `${accent}`;
-  ctx.font = `bold ${fs * 16}px Inter, sans-serif`;
-  ctx.fillText('Dashboard', px, H * 0.1);
-
+  /* ── Header ── */
+  ctx.fillStyle = acc;
+  ctx.font = `bold ${fs * 16.5}px Inter, sans-serif`;
+  ctx.fillText('Dashboard', px, H * 0.085);
   ctx.fillStyle = 'rgba(255,255,255,0.22)';
   ctx.font = `${fs * 9}px Inter, sans-serif`;
-  ctx.fillText('Sahil · All formats', px, H * 0.128);
+  ctx.fillText('Sahil · All formats', px, H * 0.115);
 
-  /* ── Player stats ring ── */
-  const cx = W * 0.72, cy = H * 0.185, r = fs * 32;
+  /* ── Form ring + stat pills side by side ── */
+  /* Ring: right side, W*0.52 to W*0.96 */
+  const ringCX = W * 0.74, ringCY = H * 0.215, ringR = fs * 29;
 
-  /* Outer ring */
-  ctx.strokeStyle = 'rgba(255,143,0,0.12)';
-  ctx.lineWidth = fs * 6;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.stroke();
-
-  /* Progress arc */
-  const battingAngle = -Math.PI / 2 + (Math.PI * 2) * 0.74;
-  ctx.strokeStyle = accent;
-  ctx.lineWidth = fs * 6;
+  /* Track */
+  ctx.strokeStyle = 'rgba(255,143,0,0.1)';
+  ctx.lineWidth = fs * 5.5;
+  ctx.beginPath(); ctx.arc(ringCX, ringCY, ringR, 0, Math.PI * 2); ctx.stroke();
+  /* Progress */
+  ctx.strokeStyle = acc;
   ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, -Math.PI / 2, battingAngle);
-  ctx.stroke();
+  ctx.beginPath(); ctx.arc(ringCX, ringCY, ringR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * 0.74); ctx.stroke();
   ctx.lineCap = 'butt';
-
-  /* Center text */
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.font = `bold ${fs * 14}px JetBrains Mono, monospace`;
+  /* Labels */
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.font = `bold ${fs * 13.5}px JetBrains Mono, monospace`;
   ctx.textAlign = 'center';
-  ctx.fillText('74%', cx, cy + fs * 5);
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillText('74%', ringCX, ringCY + fs * 4.5);
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
   ctx.font = `${fs * 8}px Inter, sans-serif`;
-  ctx.fillText('Form', cx, cy + fs * 16);
+  ctx.fillText('Form', ringCX, ringCY + fs * 15);
   ctx.textAlign = 'left';
 
-  /* ── Key stats grid ── */
-  const statsY = H * 0.07;
-  const stats = [
-    { label: 'Avg', val: '38.4', color: 'rgba(255,143,0,0.85)' },
-    { label: 'SR',  val: '142',  color: 'rgba(74,222,128,0.85)' },
-    { label: 'Runs', val: '1,247', color: 'rgba(255,255,255,0.75)' },
-  ];
-  stats.forEach((s, i) => {
-    const sy = statsY + i * H * 0.077;
-    ctx.fillStyle = 'rgba(255,255,255,0.025)';
-    ctx.beginPath();
-    ctx.roundRect(px, sy, W * 0.54, H * 0.065, 5);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.22)';
-    ctx.font = `${fs * 9}px Inter, sans-serif`;
-    ctx.fillText(s.label, px + fs * 8, sy + H * 0.042);
+  /* Stat pills: left side, stacked */
+  const statY0 = H * 0.145;
+  const statH  = H * 0.058;
+  const statW  = W * 0.45;
+  [
+    { label: 'Avg',  val: '38.4',  color: acc },
+    { label: 'SR',   val: '142',   color: 'rgba(74,222,128,0.88)' },
+    { label: 'Runs', val: '1,247', color: 'rgba(255,255,255,0.72)' },
+  ].forEach((s, i) => {
+    const sy = statY0 + i * (statH + H * 0.01);
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.roundRect(px, sy, statW, statH, 5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = `${fs * 8.5}px Inter, sans-serif`;
+    ctx.fillText(s.label, px + fs * 7, sy + statH / 2);
     ctx.fillStyle = s.color;
-    ctx.font = `bold ${fs * 12}px JetBrains Mono, monospace`;
+    ctx.font = `bold ${fs * 11.5}px JetBrains Mono, monospace`;
     ctx.textAlign = 'right';
-    ctx.fillText(s.val, px + W * 0.54 - fs * 8, sy + H * 0.045);
+    ctx.fillText(s.val, px + statW - fs * 7, sy + statH / 2);
     ctx.textAlign = 'left';
   });
 
-  /* ── Last 5 innings ── */
-  const inningsY = H * 0.315;
+  /* ── Last 5 innings bar chart ── */
+  const inY = H * 0.32;
   ctx.fillStyle = 'rgba(255,255,255,0.12)';
-  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
-  ctx.fillText('LAST 5 INNINGS', px, inningsY);
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.fillText('LAST 5 INNINGS', px, inY);
 
-  const scores = [
-    { runs: 72, out: true  },
-    { runs: 34, out: false },
-    { runs: 91, out: true  },
-    { runs: 18, out: true  },
-    { runs: 54, out: false },
-  ];
-  const maxScore = 100;
-  const barAreaW = W - px * 2;
-  const barW = barAreaW / scores.length - fs * 5;
+  const scores = [72, 34, 91, 18, 54];
+  const isOut  = [true, false, true, true, false];
+  const maxSc  = 100;
+  const chartH = H * 0.13;
+  const barAreaW2 = W - px * 2;
+  const bW2   = barAreaW2 / scores.length - fs * 5;
 
-  scores.forEach((s, i) => {
-    const bx = px + i * (barAreaW / scores.length);
-    const bh = (s.runs / maxScore) * H * 0.145;
-    const by = inningsY + H * 0.18 - bh;
-
-    const barGrad = ctx.createLinearGradient(0, by, 0, by + bh);
-    const col = s.out ? 'rgba(255,143,0,' : 'rgba(74,222,128,';
-    barGrad.addColorStop(0, col + '0.85)');
-    barGrad.addColorStop(1, col + '0.2)');
-    ctx.fillStyle = barGrad;
-    ctx.beginPath();
-    ctx.roundRect(bx, by, barW, bh, [3, 3, 0, 0]);
-    ctx.fill();
-
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.font = `bold ${fs * 9}px JetBrains Mono, monospace`;
+  scores.forEach((r, i) => {
+    const bx = px + i * (barAreaW2 / scores.length);
+    const bH2 = (r / maxSc) * chartH;
+    const by2 = inY + H * 0.015 + chartH - bH2;
+    const col = isOut[i] ? 'rgba(255,143,0,' : 'rgba(74,222,128,';
+    const bg3 = ctx.createLinearGradient(0, by2, 0, by2 + bH2);
+    bg3.addColorStop(0, col + '0.88)'); bg3.addColorStop(1, col + '0.18)');
+    ctx.fillStyle = bg3;
+    ctx.beginPath(); ctx.roundRect(bx, by2, bW2, bH2, [3, 3, 0, 0]); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = `bold ${fs * 8}px JetBrains Mono, monospace`;
     ctx.textAlign = 'center';
-    ctx.fillText(s.runs, bx + barW / 2, inningsY + H * 0.195);
-    if (!s.out) {
-      ctx.fillStyle = 'rgba(74,222,128,0.7)';
-      ctx.fillText('*', bx + barW / 2 + fs * 6, inningsY + H * 0.195);
-    }
-    ctx.textAlign = 'left';
+    ctx.fillText(r + (!isOut[i] ? '*' : ''), bx + bW2 / 2, inY + H * 0.018 + chartH + H * 0.028);
   });
+  ctx.textAlign = 'left';
 
-  /* ── Training modules ── */
-  const modY = inningsY + H * 0.23;
+  /* ── Training modules (fills remaining space) ── */
+  const modTopY = inY + H * 0.018 + chartH + H * 0.055;
   ctx.fillStyle = 'rgba(255,255,255,0.12)';
-  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
-  ctx.fillText('TODAY\'S TRAINING', px, modY);
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.fillText("TODAY'S TRAINING", px, modTopY);
 
   const modules = [
     { name: 'Batting drills', done: true,  pct: 100 },
     { name: 'Fitness',        done: false, pct: Math.floor(60 + 15 * Math.sin(t * 0.012)) },
     { name: 'Video analysis', done: false, pct: 0 },
   ];
+  const modH   = (safe - modTopY - H * 0.025 - H * 0.03) / modules.length - H * 0.01;
   modules.forEach((m, i) => {
-    const my = modY + H * 0.05 + i * H * 0.085;
+    const my = modTopY + H * 0.028 + i * (modH + H * 0.01);
     ctx.fillStyle = 'rgba(255,255,255,0.03)';
-    ctx.beginPath();
-    ctx.roundRect(px, my, W - px * 2, H * 0.07, 5);
-    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.roundRect(px, my, W - px * 2, modH, 5); ctx.fill(); ctx.stroke();
 
-    /* Progress fill */
     if (m.pct > 0) {
-      ctx.fillStyle = m.done ? 'rgba(74,222,128,0.18)' : 'rgba(255,143,0,0.12)';
-      ctx.beginPath();
-      ctx.roundRect(px, my, (W - px * 2) * (m.pct / 100), H * 0.07, 5);
-      ctx.fill();
+      ctx.fillStyle = m.done ? 'rgba(74,222,128,0.15)' : 'rgba(255,143,0,0.1)';
+      ctx.beginPath(); ctx.roundRect(px, my, (W - px * 2) * (m.pct / 100), modH, 5); ctx.fill();
     }
-
-    ctx.fillStyle = m.done ? 'rgba(74,222,128,0.8)' : 'rgba(255,255,255,0.55)';
-    ctx.font = `${fs * 10}px Inter, sans-serif`;
-    ctx.fillText(m.name, px + fs * 8, my + H * 0.045);
-
+    ctx.fillStyle = m.done ? 'rgba(74,222,128,0.82)' : 'rgba(255,255,255,0.55)';
+    ctx.font = `${fs * 9.5}px Inter, sans-serif`;
+    ctx.fillText(m.name, px + fs * 8, my + modH / 2);
+    ctx.fillStyle = m.done ? 'rgba(74,222,128,0.72)' : `rgba(255,143,0,0.68)`;
+    ctx.font = `bold ${fs * 9}px JetBrains Mono, monospace`;
     ctx.textAlign = 'right';
-    ctx.fillStyle = m.done ? 'rgba(74,222,128,0.7)' : 'rgba(255,143,0,0.65)';
-    ctx.font = `bold ${fs * 9.5}px JetBrains Mono, monospace`;
-    ctx.fillText(m.done ? '✓ Done' : `${m.pct}%`, W - px - fs * 4, my + H * 0.045);
+    ctx.fillText(m.done ? '✓ Done' : `${m.pct}%`, W - px - fs * 5, my + modH / 2);
     ctx.textAlign = 'left';
   });
 
   /* ── Tab bar ── */
-  ctx.fillStyle = 'rgba(6,8,16,0.95)';
-  ctx.fillRect(0, H * 0.918, W, H * 0.082);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = 'rgba(5,6,14,0.97)';
+  ctx.fillRect(0, safe, W, tabH);
   ctx.strokeStyle = 'rgba(255,143,0,0.08)';
   ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(0, H * 0.918);
-  ctx.lineTo(W, H * 0.918);
-  ctx.stroke();
-
-  ['Home', 'Stats', 'Train', 'Mindset'].forEach((label, i) => {
-    ctx.fillStyle = i === 0 ? 'rgba(255,143,0,0.9)' : 'rgba(255,255,255,0.2)';
+  ctx.beginPath(); ctx.moveTo(0, safe); ctx.lineTo(W, safe); ctx.stroke();
+  ctx.textBaseline = 'middle';
+  ['Home', 'Stats', 'Train', 'Mind'].forEach((lbl, i) => {
+    ctx.fillStyle = i === 0 ? `rgba(255,143,0,0.9)` : 'rgba(255,255,255,0.2)';
     ctx.font = `${fs * 8.5}px Inter, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(label, W * (0.125 + i * 0.25), H * 0.964);
+    ctx.fillText(lbl, W * (0.125 + i * 0.25), safe + tabH / 2);
   });
   ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
 }
 
 function drawPostroomScreen(ctx, W, H, t) {
-  /* ── Postroom Studio — web design tool (laptop UI) ── */
-  ctx.fillStyle = '#05070f';
+  /* ── Postroom Studio — design tool, laptop 16:10 ── */
+  ctx.fillStyle = '#050710';
   ctx.fillRect(0, 0, W, H);
 
-  const fs = H / 220;
-  const sw = W * 0.185; /* layers panel */
-  const rw = W * 0.2;   /* properties panel */
-  const cw = W - sw - rw; /* canvas area */
+  const fs  = H / 220;
+  const tbH = H * 0.1;   /* toolbar height */
+  const sw  = W * 0.18;  /* left layers panel */
+  const rw  = W * 0.19;  /* right properties panel */
+  const cw  = W - sw - rw;
 
-  /* ── Tool bar ── */
-  ctx.fillStyle = '#0a0c18';
-  ctx.fillRect(0, 0, W, H * 0.1);
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  const selLayer = Math.floor((t * 0.005) % 5);
+
+  /* ── Toolbar ── */
+  ctx.fillStyle = '#080a17';
+  ctx.fillRect(0, 0, W, tbH);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
   ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(0, H * 0.1);
-  ctx.lineTo(W, H * 0.1);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, tbH); ctx.lineTo(W, tbH); ctx.stroke();
 
   /* Logo */
-  ctx.fillStyle = 'rgba(232,130,12,0.9)';
-  ctx.font = `bold ${fs * 11}px Inter, sans-serif`;
-  ctx.fillText('Postroom', fs * 10, H * 0.066);
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(232,130,12,0.92)';
+  ctx.font = `bold ${fs * 10.5}px Inter, sans-serif`;
+  ctx.fillText('Postroom', fs * 9, tbH / 2);
 
-  /* Menu items */
-  ['File', 'Edit', 'View', 'Insert', 'Publish'].forEach((item, i) => {
-    ctx.fillStyle = i === 4 ? 'rgba(232,220,192,0.75)' : 'rgba(255,255,255,0.28)';
-    ctx.font = i === 4 ? `bold ${fs * 9.5}px Inter, sans-serif` : `${fs * 9.5}px Inter, sans-serif`;
-    ctx.fillText(item, fs * 82 + i * (cw * 0.18), H * 0.066);
+  /* Menu: spaced evenly in centre */
+  const menuItems = ['File', 'Edit', 'View', 'Insert'];
+  const menuStartX = sw + fs * 8;
+  const menuSpacing = cw * 0.16;
+  menuItems.forEach((item, i) => {
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.font = `${fs * 9}px Inter, sans-serif`;
+    ctx.fillText(item, menuStartX + i * menuSpacing, tbH / 2);
   });
 
-  /* Publish button */
-  const selLayer = Math.floor((t * 0.006) % 5);
-  ctx.fillStyle = 'rgba(74,222,128,0.85)';
-  ctx.beginPath();
-  ctx.roundRect(W - rw - fs * 60, H * 0.025, fs * 54, H * 0.055, 4);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(5,46,22,0.9)';
-  ctx.font = `bold ${fs * 9.5}px Inter, sans-serif`;
+  /* Zoom pill */
+  const zoomX = W - rw - fs * 68;
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.beginPath(); ctx.roundRect(zoomX, tbH * 0.2, fs * 22, tbH * 0.6, 3); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
   ctx.textAlign = 'center';
-  ctx.fillText('↑ Publish', W - rw - fs * 33, H * 0.063);
+  ctx.fillText('100%', zoomX + fs * 11, tbH / 2);
   ctx.textAlign = 'left';
 
-  /* Zoom */
-  ctx.fillStyle = 'rgba(255,255,255,0.05)';
-  ctx.beginPath();
-  ctx.roundRect(W - rw - fs * 86, H * 0.026, fs * 22, H * 0.052, 3);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+  /* Publish button */
+  const pubX = W - rw - fs * 44;
+  ctx.fillStyle = 'rgba(74,222,128,0.88)';
+  ctx.beginPath(); ctx.roundRect(pubX, tbH * 0.18, fs * 38, tbH * 0.64, 4); ctx.fill();
+  ctx.fillStyle = 'rgba(5,46,22,0.9)';
+  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('100%', W - rw - fs * 75, H * 0.062);
+  ctx.fillText('↑ Publish', pubX + fs * 19, tbH / 2);
   ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
 
   /* ── Left layers panel ── */
-  ctx.fillStyle = '#090b16';
-  ctx.fillRect(0, H * 0.1, sw, H - H * 0.1);
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.fillStyle = '#080a15';
+  ctx.fillRect(0, tbH, sw, H - tbH);
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
   ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(sw, H * 0.1);
-  ctx.lineTo(sw, H);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sw, tbH); ctx.lineTo(sw, H); ctx.stroke();
 
   ctx.fillStyle = 'rgba(255,255,255,0.14)';
-  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
-  ctx.fillText('LAYERS', fs * 9, H * 0.15);
+  ctx.font = `bold ${fs * 8}px Inter, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText('LAYERS', fs * 8, tbH + H * 0.048);
 
   const layers = [
-    { name: 'Headline',    icon: 'T', color: 'rgba(232,130,12,0.8)' },
-    { name: 'Sub-copy',    icon: 'T', color: 'rgba(255,255,255,0.4)' },
-    { name: 'CTA button',  icon: '⬛', color: 'rgba(74,222,128,0.7)' },
-    { name: 'Hero image',  icon: '🖼', color: 'rgba(139,92,246,0.7)' },
-    { name: 'Nav bar',     icon: '≡', color: 'rgba(46,91,255,0.7)' },
+    { name: 'Headline',   icon: 'T' },
+    { name: 'Sub-copy',   icon: 'T' },
+    { name: 'CTA button', icon: '□' },
+    { name: 'Hero image', icon: '▦' },
+    { name: 'Nav bar',    icon: '≡' },
   ];
+  const layerH = (H - tbH - H * 0.08) / layers.length;
   layers.forEach((l, i) => {
-    const ly = H * (0.185 + i * 0.115);
+    const ly = tbH + H * 0.08 + i * layerH + layerH / 2;
     const isSel = i === selLayer;
     if (isSel) {
       ctx.fillStyle = 'rgba(232,130,12,0.1)';
-      ctx.fillRect(0, ly - H * 0.023, sw, H * 0.1);
+      ctx.fillRect(0, ly - layerH / 2, sw, layerH);
     }
     /* Icon box */
-    ctx.fillStyle = isSel ? 'rgba(232,130,12,0.85)' : 'rgba(255,255,255,0.08)';
-    ctx.beginPath();
-    ctx.roundRect(fs * 7, ly - fs * 5, fs * 12, fs * 12, 2);
-    ctx.fill();
-    ctx.fillStyle = isSel ? '#fff' : 'rgba(255,255,255,0.25)';
+    ctx.fillStyle = isSel ? 'rgba(232,130,12,0.85)' : 'rgba(255,255,255,0.07)';
+    ctx.beginPath(); ctx.roundRect(fs * 6, ly - fs * 5.5, fs * 11, fs * 11, 2); ctx.fill();
+    ctx.fillStyle = isSel ? '#fff' : 'rgba(255,255,255,0.22)';
     ctx.font = `${fs * 8}px sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(l.icon, fs * 13, ly + fs * 4);
+    ctx.fillText(l.icon, fs * 11.5, ly);
     ctx.textAlign = 'left';
     /* Name */
-    ctx.fillStyle = isSel ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.32)';
-    ctx.font = `${fs * 9.5}px Inter, sans-serif`;
-    ctx.fillText(l.name, fs * 24, ly + fs * 4.5);
+    ctx.fillStyle = isSel ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.3)';
+    ctx.font = `${fs * 9}px Inter, sans-serif`;
+    ctx.fillText(l.name, fs * 22, ly);
   });
 
-  /* ── Canvas area (centre) ── */
-  ctx.fillStyle = '#07091a';
-  ctx.fillRect(sw, H * 0.1, cw, H - H * 0.1);
+  /* ── Centre canvas area ── */
+  ctx.fillStyle = '#06081a';
+  ctx.fillRect(sw, tbH, cw, H - tbH);
 
   /* Dot grid */
-  const gsp = fs * 18;
-  ctx.fillStyle = 'rgba(255,255,255,0.035)';
-  for (let gx = sw + gsp; gx < sw + cw; gx += gsp)
-    for (let gy = H * 0.1 + gsp; gy < H; gy += gsp) {
-      ctx.beginPath(); ctx.arc(gx, gy, 0.8, 0, Math.PI * 2); ctx.fill();
+  const gsp = Math.max(fs * 16, 8);
+  ctx.fillStyle = 'rgba(255,255,255,0.032)';
+  for (let gx = sw; gx < sw + cw; gx += gsp)
+    for (let gy = tbH; gy < H; gy += gsp) {
+      ctx.beginPath(); ctx.arc(gx, gy, 0.7, 0, Math.PI * 2); ctx.fill();
     }
 
-  /* The page canvas — centered */
-  const pgX = sw + cw * 0.07, pgY = H * 0.15;
-  const pgW = cw * 0.86, pgH = H * 0.79;
+  /* Page preview */
+  const pgX = sw + cw * 0.06, pgY = tbH + H * 0.04;
+  const pgW = cw * 0.88, pgH = H * 0.88;
 
-  /* Page shadow */
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowBlur = fs * 18;
-  ctx.fillStyle = '#090b18';
-  ctx.beginPath();
-  ctx.roundRect(pgX, pgY, pgW, pgH, 5);
-  ctx.fill();
-  ctx.shadowBlur = 0;
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur  = fs * 16;
+  ctx.fillStyle   = '#090b1a';
+  ctx.beginPath(); ctx.roundRect(pgX, pgY, pgW, pgH, 5); ctx.fill();
+  ctx.shadowBlur  = 0;
 
-  /* Fake browser chrome */
-  ctx.fillStyle = '#0d0f1f';
-  ctx.fillRect(pgX, pgY, pgW, pgH * 0.06);
-  [0.12, 0.2, 0.28].forEach((fx, fi) => {
-    const cols = ['#ff5f57', '#ffbd2e', '#28ca42'];
-    ctx.fillStyle = cols[fi];
-    ctx.beginPath();
-    ctx.arc(pgX + pgW * fx, pgY + pgH * 0.03, fs * 3.5, 0, Math.PI * 2);
-    ctx.fill();
+  /* Browser chrome */
+  ctx.fillStyle = '#0c0e20';
+  ctx.fillRect(pgX, pgY, pgW, pgH * 0.055);
+  [[0.1,'#ff5f57'],[0.17,'#ffbd2e'],[0.24,'#28ca42']].forEach(([fx, c]) => {
+    ctx.fillStyle = c;
+    ctx.beginPath(); ctx.arc(pgX + pgW * fx, pgY + pgH * 0.027, fs * 3, 0, Math.PI * 2); ctx.fill();
   });
   ctx.fillStyle = 'rgba(255,255,255,0.06)';
-  ctx.beginPath();
-  ctx.roundRect(pgX + pgW * 0.35, pgY + pgH * 0.012, pgW * 0.3, pgH * 0.038, 10);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.22)';
-  ctx.font = `${fs * 8}px JetBrains Mono, monospace`;
+  ctx.beginPath(); ctx.roundRect(pgX + pgW * 0.32, pgY + pgH * 0.01, pgW * 0.36, pgH * 0.034, 10); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.font = `${fs * 7.5}px JetBrains Mono, monospace`;
   ctx.textAlign = 'center';
-  ctx.fillText('postroom.studio', pgX + pgW * 0.5, pgY + pgH * 0.038);
+  ctx.fillText('postroom.studio', pgX + pgW * 0.5, pgY + pgH * 0.035);
   ctx.textAlign = 'left';
 
-  /* Page content */
-  const pcY = pgY + pgH * 0.07;
+  /* Page body */
+  const pcY = pgY + pgH * 0.06;
 
-  /* Nav in page */
-  ctx.fillStyle = 'rgba(255,255,255,0.03)';
-  ctx.fillRect(pgX, pcY, pgW, pgH * 0.08);
-  ctx.fillStyle = 'rgba(232,220,192,0.6)';
-  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
-  ctx.fillText('Postroom', pgX + pgW * 0.05, pcY + pgH * 0.052);
-  ['Work', 'About', 'Contact'].forEach((label, i) => {
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.font = `${fs * 8.5}px Inter, sans-serif`;
+  /* Fake nav in page */
+  ctx.fillStyle = 'rgba(255,255,255,0.025)';
+  ctx.fillRect(pgX, pcY, pgW, pgH * 0.07);
+  ctx.fillStyle = 'rgba(232,220,192,0.55)';
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Postroom', pgX + pgW * 0.05, pcY + pgH * 0.035);
+  ['Work','About','Contact'].forEach((lbl, i) => {
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.font = `${fs * 8}px Inter, sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText(label, pgX + pgW * (0.7 + i * 0.12), pcY + pgH * 0.052);
+    ctx.fillText(lbl, pgX + pgW * (0.68 + i * 0.12), pcY + pgH * 0.035);
   });
   ctx.textAlign = 'left';
 
-  /* Headline block — with selection box on it */
-  const hlY = pcY + pgH * 0.12;
+  /* Hero headline */
+  const hlY = pcY + pgH * 0.1;
   ctx.fillStyle = 'rgba(232,220,192,0.88)';
-  ctx.font = `bold ${fs * 20}px DM Serif Display, Georgia, serif`;
+  ctx.font = `bold ${fs * 18}px DM Serif Display, Georgia, serif`;
   ctx.fillText('Visual stories', pgX + pgW * 0.06, hlY);
   ctx.fillStyle = 'rgba(232,130,12,0.85)';
-  ctx.fillText('that move.', pgX + pgW * 0.06, hlY + fs * 22);
+  ctx.fillText('that move.', pgX + pgW * 0.06, hlY + fs * 20);
 
-  /* Blinking cursor at end of headline */
-  const cursorBlink = Math.sin(t * 0.12) > 0;
-  if (cursorBlink) {
+  /* Cursor blink */
+  if (Math.sin(t * 0.1) > 0) {
+    ctx.font = `bold ${fs * 18}px DM Serif Display, Georgia, serif`;
     const tw = ctx.measureText('that move.').width;
-    ctx.fillStyle = 'rgba(232,130,12,0.9)';
-    ctx.fillRect(pgX + pgW * 0.06 + tw + 2, hlY + fs * 5, 2, fs * 17);
+    ctx.fillStyle = 'rgba(232,130,12,0.88)';
+    ctx.fillRect(pgX + pgW * 0.06 + tw + 2, hlY + fs * 3, 2, fs * 16);
   }
 
-  /* Sub-copy lines */
+  /* Sub-copy placeholder lines */
   [0, 1].forEach(i => {
-    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.fillStyle = 'rgba(255,255,255,0.14)';
     ctx.beginPath();
-    ctx.roundRect(pgX + pgW * 0.06, hlY + fs * 32 + i * fs * 11, pgW * (0.45 - i * 0.08), fs * 8, 2);
+    ctx.roundRect(pgX + pgW * 0.06, hlY + fs * 30 + i * fs * 11, pgW * (0.42 - i * 0.07), fs * 7, 2);
     ctx.fill();
   });
 
-  /* CTA button in page */
-  const ctaY = hlY + fs * 58;
-  const ctaGrad = ctx.createLinearGradient(pgX + pgW * 0.06, 0, pgX + pgW * 0.06 + pgW * 0.24, 0);
-  ctaGrad.addColorStop(0, 'rgba(232,220,192,0.9)');
-  ctaGrad.addColorStop(1, 'rgba(232,130,12,0.8)');
-  ctx.fillStyle = ctaGrad;
-  ctx.beginPath();
-  ctx.roundRect(pgX + pgW * 0.06, ctaY, pgW * 0.24, fs * 16, 20);
-  ctx.fill();
+  /* CTA */
+  const ctaY = hlY + fs * 54;
+  const ctaG = ctx.createLinearGradient(pgX + pgW * 0.06, 0, pgX + pgW * 0.3, 0);
+  ctaG.addColorStop(0, 'rgba(232,220,192,0.92)');
+  ctaG.addColorStop(1, 'rgba(232,130,12,0.82)');
+  ctx.fillStyle = ctaG;
+  ctx.beginPath(); ctx.roundRect(pgX + pgW * 0.06, ctaY, pgW * 0.22, fs * 15, 20); ctx.fill();
   ctx.fillStyle = '#050810';
-  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.font = `bold ${fs * 7.8}px Inter, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('See our work →', pgX + pgW * 0.06 + pgW * 0.12, ctaY + fs * 10.5);
+  ctx.fillText('See our work →', pgX + pgW * 0.06 + pgW * 0.11, ctaY + fs * 8);
   ctx.textAlign = 'left';
 
-  /* Selection border around headline */
-  const selX = pgX + pgW * 0.04, selY2 = hlY - fs * 4;
-  const selW = pgW * 0.62, selH = fs * 48;
+  /* Blue selection border around headline block */
+  const selX = pgX + pgW * 0.04, selY2 = hlY - fs * 3;
+  const selW2 = pgW * 0.58, selH2 = fs * 46;
   ctx.strokeStyle = '#2E5BFF';
   ctx.lineWidth = 1;
-  ctx.setLineDash([]);
-  ctx.strokeRect(selX, selY2, selW, selH);
+  ctx.strokeRect(selX, selY2, selW2, selH2);
   [[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]].forEach(([hx, hy]) => {
     ctx.fillStyle = '#fff';
-    ctx.strokeStyle = '#2E5BFF';
-    ctx.lineWidth = 0.8;
-    ctx.fillRect(selX + selW * hx - fs * 2.5, selY2 + selH * hy - fs * 2.5, fs * 5, fs * 5);
-    ctx.strokeRect(selX + selW * hx - fs * 2.5, selY2 + selH * hy - fs * 2.5, fs * 5, fs * 5);
+    ctx.strokeStyle = '#2E5BFF'; ctx.lineWidth = 0.8;
+    ctx.fillRect(selX + selW2 * hx - fs * 2.5, selY2 + selH2 * hy - fs * 2.5, fs * 5, fs * 5);
+    ctx.strokeRect(selX + selW2 * hx - fs * 2.5, selY2 + selH2 * hy - fs * 2.5, fs * 5, fs * 5);
   });
 
   /* ── Right properties panel ── */
-  ctx.fillStyle = '#090b16';
-  ctx.fillRect(W - rw, H * 0.1, rw, H - H * 0.1);
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.fillStyle = '#080a15';
+  ctx.fillRect(W - rw, tbH, rw, H - tbH);
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
   ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(W - rw, H * 0.1);
-  ctx.lineTo(W - rw, H);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W - rw, tbH); ctx.lineTo(W - rw, H); ctx.stroke();
 
   ctx.fillStyle = 'rgba(255,255,255,0.14)';
-  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
-  ctx.fillText('STYLE', W - rw + fs * 9, H * 0.15);
-
-  /* Element name */
-  ctx.fillStyle = 'rgba(232,130,12,0.8)';
-  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
-  ctx.fillText('Headline', W - rw + fs * 9, H * 0.19);
+  ctx.font = `bold ${fs * 8}px Inter, sans-serif`;
+  ctx.fillText('STYLE', W - rw + fs * 8, tbH + H * 0.048);
+  ctx.fillStyle = 'rgba(232,130,12,0.78)';
+  ctx.font = `${fs * 8}px JetBrains Mono, monospace`;
+  ctx.fillText('Headline', W - rw + fs * 8, tbH + H * 0.082);
 
   const props = [
-    { label: 'Font',   val: 'DM Serif Display' },
-    { label: 'Size',   val: `${fs * 20 | 0}px` },
+    { label: 'Font',   val: 'DM Serif' },
+    { label: 'Size',   val: '52px' },
     { label: 'Weight', val: '700' },
     { label: 'Color',  val: '#E8DCC0' },
-    { label: 'Align',  val: 'Left' },
-    { label: 'Line H', val: '1.1' },
+    { label: 'Align',  val: 'Left ↓' },
+    { label: 'Line H', val: '1.08' },
   ];
+  const propH = (H - tbH - H * 0.12) / props.length;
   props.forEach((p, i) => {
-    const py = H * (0.23 + i * 0.098);
-    ctx.fillStyle = 'rgba(255,255,255,0.16)';
-    ctx.font = `${fs * 8.5}px Inter, sans-serif`;
-    ctx.fillText(p.label, W - rw + fs * 9, py);
-    ctx.fillStyle = 'rgba(255,255,255,0.05)';
-    ctx.beginPath();
-    ctx.roundRect(W - rw + fs * 9, py + fs * 3, rw - fs * 18, fs * 12, 3);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(232,130,12,0.7)';
-    ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+    const py = tbH + H * 0.12 + i * propH + propH / 2;
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.font = `${fs * 8}px Inter, sans-serif`;
+    ctx.fillText(p.label, W - rw + fs * 8, py - propH * 0.12);
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.beginPath(); ctx.roundRect(W - rw + fs * 8, py - fs * 1.5, rw - fs * 16, fs * 11, 3); ctx.fill();
+    ctx.fillStyle = 'rgba(232,130,12,0.72)';
+    ctx.font = `${fs * 7.8}px JetBrains Mono, monospace`;
     ctx.textAlign = 'right';
-    ctx.fillText(p.val, W - fs * 11, py + fs * 11.5);
+    ctx.fillText(p.val, W - fs * 10, py + fs * 5.5);
     ctx.textAlign = 'left';
   });
+  ctx.textBaseline = 'alphabetic';
 }
 
 function initProjectPreviews() {
