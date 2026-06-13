@@ -133,41 +133,33 @@ function initConstellation() {
 
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* All cards stay within ±55° so they never face backwards (no mirroring) */
+  /* Cards have NO individual rotateY. Stage rotates continuously; each card counter-rotates
+     to always face the viewer. Full orbit with zero mirroring. */
   const devices = [
     {
-      label: 'MacBook Pro',
-      width: 290, height: 186,
-      /* Front-center, closest */
-      style: 'left:50%;top:50%;transform:translate(-50%,-52%) translateZ(100px)',
-      isLaptop: true,
-      draw: drawDashboard,
+      label: 'MacBook Pro', width: 285, height: 184,
+      left: '50%', top: '50%', base: 'translate(-50%,-52%) translateZ(110px)',
+      isLaptop: true, draw: drawDashboard,
     },
     {
-      label: 'iPhone 15',
-      width: 88, height: 192,
-      style: 'left:80%;top:57%;transform:translate(-50%,-50%) rotateY(36deg) translateZ(18px)',
+      label: 'iPhone 15', width: 88, height: 192,
+      left: '74%', top: '57%', base: 'translate(-50%,-50%) translateZ(22px)',
       draw: drawMobileApp,
     },
     {
-      label: 'Android',
-      width: 86, height: 190,
-      style: 'left:20%;top:60%;transform:translate(-50%,-50%) rotateY(-36deg) translateZ(18px)',
+      label: 'Android', width: 86, height: 190,
+      left: '26%', top: '60%', base: 'translate(-50%,-50%) translateZ(22px)',
       draw: drawChatApp,
     },
     {
-      label: 'iPad Pro',
-      width: 208, height: 158,
-      style: 'left:77%;top:22%;transform:translate(-50%,-50%) rotateY(50deg) rotateX(4deg) translateZ(-20px)',
-      opacity: 0.65,
-      draw: drawAnalytics,
+      label: 'iPad Pro', width: 208, height: 158,
+      left: '72%', top: '22%', base: 'translate(-50%,-50%) translateZ(-18px)',
+      opacity: 0.7, draw: drawAnalytics,
     },
     {
-      label: 'Windows',
-      width: 222, height: 146,
-      style: 'left:24%;top:24%;transform:translate(-50%,-50%) rotateY(-50deg) rotateX(4deg) translateZ(-20px)',
-      opacity: 0.62,
-      draw: drawDashboard,
+      label: 'Windows', width: 220, height: 146,
+      left: '28%', top: '24%', base: 'translate(-50%,-50%) translateZ(-18px)',
+      opacity: 0.65, draw: drawDashboard,
     },
   ];
 
@@ -175,10 +167,15 @@ function initConstellation() {
   const stage = wrap.querySelector('.constellation-stage');
   if (!stage) return;
 
+  const deviceEls = [];
+
   devices.forEach(dev => {
     const el = document.createElement('div');
     el.className = 'cs-device';
-    el.style.cssText = dev.style;
+    el.style.left = dev.left;
+    el.style.top  = dev.top;
+    el.style.transform = dev.base;
+    el.dataset.base = dev.base;
     if (dev.opacity) el.style.opacity = dev.opacity;
 
     const inner = document.createElement('div');
@@ -226,6 +223,7 @@ function initConstellation() {
     el.appendChild(inner);
     el.appendChild(label);
     stage.appendChild(el);
+    deviceEls.push(el);
 
     /* Animate the canvas content */
     let animFrame;
@@ -241,27 +239,36 @@ function initConstellation() {
     animate();
   });
 
-  /* Mouse-driven parallax — keeps cards always visible (never rotates full 360°) */
-  if (!prefersReduced) {
-    let tRY = -5, tRX = 5, cRY = -5, cRX = 5;
+  /* Stage rotates continuously. Each card counter-rotates to always face the viewer. */
+  {
+    let stageAngle = 0, tMouse = 0, cMouse = 0;
+    const SPEED = 0.18; /* °/frame → full orbit ≈ 33s */
+    const TILT  = 5;    /* constant X-tilt for depth feel */
 
-    const onMove = e => {
-      const rect = wrap.getBoundingClientRect();
-      const nx = (e.clientX - rect.left) / rect.width - 0.5;
-      const ny = (e.clientY - rect.top)  / rect.height - 0.5;
-      tRY = -5 + nx * 18; /* ±9° around -5° default */
-      tRX =  5 - ny * 12; /* ±6° around 5° default */
-    };
+    if (!prefersReduced) {
+      wrap.addEventListener('mousemove', e => {
+        const rect = wrap.getBoundingClientRect();
+        tMouse = ((e.clientX - rect.left) / rect.width - 0.5) * 14;
+      });
+      wrap.addEventListener('mouseleave', () => { tMouse = 0; });
 
-    wrap.addEventListener('mousemove', onMove);
-    wrap.addEventListener('mouseleave', () => { tRY = -5; tRX = 5; });
+      (function animLoop() {
+        stageAngle += SPEED;
+        cMouse += (tMouse - cMouse) * 0.05;
+        const angle = stageAngle + cMouse;
 
-    (function animStage() {
-      cRY += (tRY - cRY) * 0.05;
-      cRX += (tRX - cRX) * 0.05;
-      stage.style.transform = `rotateX(${cRX.toFixed(3)}deg) rotateY(${cRY.toFixed(3)}deg)`;
-      requestAnimationFrame(animStage);
-    })();
+        stage.style.transform = `rotateX(${TILT}deg) rotateY(${angle.toFixed(2)}deg)`;
+
+        /* Counter-rotate so canvas text is never mirrored regardless of orbit position */
+        deviceEls.forEach(card => {
+          card.style.transform = `${card.dataset.base} rotateY(${(-angle).toFixed(2)}deg)`;
+        });
+
+        requestAnimationFrame(animLoop);
+      })();
+    } else {
+      stage.style.transform = `rotateX(${TILT}deg) rotateY(-5deg)`;
+    }
   }
 
   /* Build mobile constellation */
