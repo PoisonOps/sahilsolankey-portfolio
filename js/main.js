@@ -2758,9 +2758,13 @@ function initCopyEmail() {
   el.style.cursor = 'pointer';
   el.addEventListener('click', function(e) {
     e.preventDefault();
-    navigator.clipboard.writeText('sahilsolankey1009@gmail.com').then(function() {
-      showToast('Email copied!');
-    });
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText('sahilsolankey1009@gmail.com')
+        .then(function() { showToast('Email copied!'); })
+        .catch(function() { showToast('sahilsolankey1009@gmail.com'); });
+    } else {
+      showToast('sahilsolankey1009@gmail.com');
+    }
   });
 }
 
