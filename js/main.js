@@ -1329,47 +1329,99 @@ function initCursor() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SOUND SYSTEM  (Howler, lazy init, opt-in only)
+   SOUND SYSTEM  (Web Audio API synthesis — no files needed)
    ═══════════════════════════════════════════════════════════════════ */
 const Sound = (function () {
-  let initialized = false, isOn = false;
-  let ambient, typeSound, pingSound;
+  let ac = null, isOn = false;
+  let ambientSource = null, ambientGain = null;
   const KEY = 'portfolio_sound';
 
-  function tryHowl(src, opts = {}) {
-    try {
-      return new Howl({ src: [src], ...opts, onloaderror: () => console.warn('Audio missing:', src) });
-    } catch (e) { return null; }
+  function ctx() {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    return ac;
   }
 
-  function lazyInit() {
-    if (initialized) return;
-    initialized = true;
-    ambient   = tryHowl('assets/audio/ambient.mp3', { loop: true, volume: 0 });
-    typeSound = tryHowl('assets/audio/type.mp3',    { volume: 0.04 });
-    pingSound = tryHowl('assets/audio/ping.mp3',    { volume: 0.04 });
+  /* Brown noise ambient — warm, subtle, non-distracting */
+  function startAmbient() {
+    const a = ctx();
+    const seconds = 4;
+    const buf = a.createBuffer(1, a.sampleRate * seconds, a.sampleRate);
+    const data = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < data.length; i++) {
+      const w = Math.random() * 2 - 1;
+      data[i] = (last + 0.02 * w) / 1.02 * 3.5;
+      last = data[i];
+    }
+
+    const src = a.createBufferSource();
+    src.buffer = buf;
+    src.loop   = true;
+
+    const lpf = a.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.value = 180;
+
+    ambientGain = a.createGain();
+    ambientGain.gain.value = 0;
+
+    src.connect(lpf);
+    lpf.connect(ambientGain);
+    ambientGain.connect(a.destination);
+    src.start();
+    ambientSource = src;
+
+    ambientGain.gain.linearRampToValueAtTime(0.055, a.currentTime + 1.8);
+  }
+
+  /* Short key-tap click */
+  function synthClick() {
+    const a = ctx();
+    const osc  = a.createOscillator();
+    const gain = a.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(900, a.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(350, a.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.035, a.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.06);
+    osc.connect(gain);
+    gain.connect(a.destination);
+    osc.start();
+    osc.stop(a.currentTime + 0.07);
+  }
+
+  /* Two-tone success chime */
+  function synthPing() {
+    const a = ctx();
+    [[880, 0], [1320, 0.09]].forEach(([freq, delay]) => {
+      const osc  = a.createOscillator();
+      const gain = a.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, a.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(0.04, a.currentTime + delay + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + delay + 0.55);
+      osc.connect(gain);
+      gain.connect(a.destination);
+      osc.start(a.currentTime + delay);
+      osc.stop(a.currentTime + delay + 0.6);
+    });
   }
 
   return {
     toggle() {
-      lazyInit();
       isOn = !isOn;
       if (isOn) {
-        try { ambient?.play(); ambient?.fade(0, 0.05, 1500); } catch (e) {}
+        if (!ambientSource) startAmbient();
+        else ambientGain.gain.linearRampToValueAtTime(0.055, ctx().currentTime + 1.5);
       } else {
-        try { ambient?.fade(ambient?.volume() || 0.05, 0, 800); } catch (e) {}
+        if (ambientGain) ambientGain.gain.linearRampToValueAtTime(0, ctx().currentTime + 0.9);
       }
       localStorage.setItem(KEY, isOn ? 'on' : 'off');
       return isOn;
     },
-    playKey() {
-      if (!isOn) return;
-      try { typeSound?.play(); } catch (e) {}
-    },
-    playPing() {
-      if (!isOn) return;
-      try { pingSound?.play(); } catch (e) {}
-    },
+    playKey()  { if (isOn) synthClick(); },
+    playPing() { if (isOn) synthPing();  },
     get active() { return isOn; },
   };
 })();
