@@ -32,6 +32,18 @@
 </head>
 <body>
 
+  <div id="scroll-progress"></div>
+
+  <div id="intro-loader">
+    <div id="intro-terminal">
+      <span class="intro-line" id="iline1"></span>
+      <span class="intro-line" id="iline2"></span>
+      <span class="intro-line" id="iline3"></span>
+      <span class="intro-cursor">█</span>
+    </div>
+    <div id="intro-skip">press any key to skip</div>
+  </div>
+
   <!-- Custom cursor -->
   <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
   <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
@@ -113,6 +125,10 @@
             </a>
             <a class="btn-ghost" href="#projects">See the work ↓</a>
           </div>
+          <div class="hero-ticker" id="hero-ticker">
+            <span class="ticker-dot">●</span>
+            <span class="ticker-text">Currently: shipping CATalyst v2 · <span class="ticker-age">updated 2 days ago</span></span>
+          </div>
         </div>
 
         <div class="hero-right" aria-hidden="true">
@@ -188,12 +204,57 @@
     </section>
 
     <!-- ══════════════════════════════════════════════════════
+         OUTPUT VELOCITY TIMELINE
+         ══════════════════════════════════════════════════════ -->
+    <section class="section-timeline-mini" aria-label="Build timeline">
+      <div class="content-wrap">
+        <p class="t-eyebrow" style="margin-bottom: 24px;">Output velocity</p>
+        <div class="timeline-mini-track">
+          <div class="timeline-mini-line"></div>
+          <div class="timeline-mini-items">
+            <div class="tmi" data-color="#00C853">
+              <div class="tmi-dot"></div>
+              <div class="tmi-label">Mar 2025</div>
+              <div class="tmi-project">GharKhata</div>
+              <div class="tmi-time">2 days</div>
+            </div>
+            <div class="tmi" data-color="#FF8F00">
+              <div class="tmi-dot"></div>
+              <div class="tmi-label">Apr 2025</div>
+              <div class="tmi-project">PitchReady</div>
+              <div class="tmi-time">1 day</div>
+            </div>
+            <div class="tmi" data-color="#2E5BFF">
+              <div class="tmi-dot"></div>
+              <div class="tmi-label">May 2025</div>
+              <div class="tmi-project">CATalyst</div>
+              <div class="tmi-time">∞ ongoing</div>
+            </div>
+            <div class="tmi" data-color="#E8DCC0">
+              <div class="tmi-dot"></div>
+              <div class="tmi-label">Jun 2025</div>
+              <div class="tmi-project">Postroom</div>
+              <div class="tmi-time">designed</div>
+            </div>
+            <div class="tmi tmi-next" data-color="#4ADE80">
+              <div class="tmi-dot"></div>
+              <div class="tmi-label">Next</div>
+              <div class="tmi-project">Your idea</div>
+              <div class="tmi-time">7 days</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
          PROJECTS
          ══════════════════════════════════════════════════════ -->
     <div class="projects-container" id="projects">
+      <div class="projects-carousel-wrap" id="projects-carousel">
 
       <!-- 01 CATalyst -->
-      <section class="section-project" data-project="catalyst" id="project-catalyst" aria-label="Project: CATalyst">
+      <section class="section-project" data-project="catalyst" id="project-catalyst" data-atmosphere-color="rgba(46,91,255,0.08)" aria-label="Project: CATalyst">
         <div class="project-inner">
           <div class="project-left">
             <p class="t-eyebrow reveal-up">Project 01 — EdTech SaaS · Revenue-Generating</p>
@@ -213,6 +274,7 @@
               <span class="tech-pill">PWA</span>
               <span class="tech-pill">GSAP</span>
             </div>
+            <button class="btn-cs" data-cs="catalyst">Case study →</button>
             <a class="project-link reveal-up" href="https://catalyst-app-six.vercel.app" target="_blank" rel="noopener">View live →</a>
           </div>
           <div class="project-right" aria-hidden="true">
@@ -241,7 +303,7 @@
       </section>
 
       <!-- 02 GharKhata -->
-      <section class="section-project" data-project="gharkhata" id="project-gharkhata" aria-label="Project: GharKhata">
+      <section class="section-project" data-project="gharkhata" id="project-gharkhata" data-atmosphere-color="rgba(0,200,83,0.07)" aria-label="Project: GharKhata">
         <div class="project-inner">
           <div class="project-left">
             <p class="t-eyebrow reveal-up">Project 02 — Fintech PWA · Offline-First</p>
@@ -261,6 +323,7 @@
               <span class="tech-pill">Supabase</span>
               <span class="tech-pill">Recharts</span>
             </div>
+            <button class="btn-cs" data-cs="gharkhata">Case study →</button>
             <a class="project-link reveal-up" href="https://gharkhata.vercel.app" target="_blank" rel="noopener">View live →</a>
           </div>
           <div class="project-right" aria-hidden="true">
@@ -279,7 +342,7 @@
       </section>
 
       <!-- 03 PitchReady -->
-      <section class="section-project" data-project="pitchready" id="project-pitchready" aria-label="Project: PitchReady">
+      <section class="section-project" data-project="pitchready" id="project-pitchready" data-atmosphere-color="rgba(255,143,0,0.07)" aria-label="Project: PitchReady">
         <div class="project-inner">
           <div class="project-left">
             <p class="t-eyebrow reveal-up">Project 03 — Sports Tech · SSR</p>
@@ -298,6 +361,7 @@
               <span class="tech-pill">Tailwind 4</span>
               <span class="tech-pill">PWA</span>
             </div>
+            <button class="btn-cs" data-cs="pitchready">Case study →</button>
             <a class="project-link reveal-up" href="https://pitchready-app.vercel.app" target="_blank" rel="noopener">View live →</a>
           </div>
           <div class="project-right" aria-hidden="true">
@@ -316,7 +380,7 @@
       </section>
 
       <!-- 04 Postroom Studio -->
-      <section class="section-project" data-project="postroom" id="project-postroom" aria-label="Project: Postroom Studio">
+      <section class="section-project" data-project="postroom" id="project-postroom" data-atmosphere-color="rgba(232,220,192,0.05)" aria-label="Project: Postroom Studio">
         <div class="project-inner">
           <div class="project-left">
             <p class="t-eyebrow reveal-up">Project 04 — Brand &amp; Web Design</p>
@@ -334,6 +398,7 @@
               <span class="tech-pill">IntersectionObserver reveals</span>
               <span class="tech-pill">Design tokens</span>
             </div>
+            <button class="btn-cs" data-cs="postroom">Case study →</button>
             <a class="project-link reveal-up" id="postroom-link" href="#" target="_blank" rel="noopener">View live →</a>
           </div>
           <div class="project-right" aria-hidden="true">
@@ -361,6 +426,13 @@
         </div>
       </section>
 
+      </div><!-- /projects-carousel-wrap -->
+      <div class="carousel-dots" id="carousel-dots">
+        <div class="carousel-dot active" data-idx="0"></div>
+        <div class="carousel-dot" data-idx="1"></div>
+        <div class="carousel-dot" data-idx="2"></div>
+        <div class="carousel-dot" data-idx="3"></div>
+      </div>
     </div><!-- /projects-container -->
 
     <!-- ══════════════════════════════════════════════════════
@@ -580,6 +652,12 @@
           </div>
         </div>
 
+        <div class="fast-demo" id="fast-demo">
+          <span class="fast-label">If you started today →</span>
+          <span class="fast-date" id="fast-date"></span>
+          <span class="fast-suffix">your MVP goes live</span>
+        </div>
+
       </div>
     </section>
 
@@ -616,6 +694,12 @@
               <textarea id="field-idea" name="idea" placeholder="A booking tool for my coaching business…" rows="3" required></textarea>
               <div class="form-error" id="idea-error">Please describe your idea before sending.</div>
             </div>
+            <div class="form-suggestions">
+              <button type="button" class="form-pill" data-text="I want to build an AI-powered tool that ">AI-powered tool</button>
+              <button type="button" class="form-pill" data-text="I need a mobile app that ">Mobile app</button>
+              <button type="button" class="form-pill" data-text="I want a SaaS dashboard for ">SaaS dashboard</button>
+              <button type="button" class="form-pill" data-text="I need a landing page that ">Landing page</button>
+            </div>
             <div class="form-field">
               <label for="field-who">Who It's For</label>
               <input type="text" id="field-who" name="who" placeholder="Fitness coaches with 1:1 clients" />
@@ -637,6 +721,41 @@
     </section>
 
     <!-- ══════════════════════════════════════════════════════
+         SOCIAL PROOF
+         ══════════════════════════════════════════════════════ -->
+    <section class="section-social" aria-label="Social proof">
+      <div class="content-wrap">
+        <p class="t-eyebrow" style="margin-bottom: 32px;">What they said</p>
+        <div class="social-grid">
+          <div class="social-card">
+            <div class="social-quote">CATalyst is the only prep tool that actually made me confront my weak areas instead of just doing more practice.</div>
+            <div class="social-author">
+              <div class="social-avatar" style="background: #2E5BFF;">A</div>
+              <div>
+                <div class="social-name">Arjun M.</div>
+                <div class="social-meta">CAT 2025 aspirant · via WhatsApp</div>
+              </div>
+            </div>
+          </div>
+          <div class="social-card">
+            <div class="social-quote">GharKhata fixed arguments about money in our house. Finally both of us know where the money went.</div>
+            <div class="social-author">
+              <div class="social-avatar" style="background: #00C853;">P</div>
+              <div>
+                <div class="social-name">Priya K.</div>
+                <div class="social-meta">GharKhata user · Pune</div>
+              </div>
+            </div>
+          </div>
+          <div class="social-card social-card-cta">
+            <div class="social-quote" style="color: var(--text-dim);">Building something? Your project could be next. Sahil ships fast.</div>
+            <a href="https://wa.me/917080442040?text=Hi%20Sahil%2C%20I%20saw%20your%20portfolio%20and%20want%20to%20discuss%20a%20project." target="_blank" rel="noopener" class="btn-wa-inline">WhatsApp Sahil →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
          FINAL CTA
          ══════════════════════════════════════════════════════ -->
     <section class="section-final-cta" id="final-cta" aria-label="Final call to action">
@@ -649,7 +768,7 @@
            target="_blank" rel="noopener">
           Start your build →
         </a>
-        <a class="final-email-link" href="mailto:sahilsolankey1009@gmail.com">
+        <a class="final-email-link" id="footer-email" href="mailto:sahilsolankey1009@gmail.com">
           or sahilsolankey1009@gmail.com
         </a>
       </div>
@@ -673,6 +792,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <!-- Case Study Drawer -->
+  <div id="cs-overlay" class="hidden" aria-hidden="true">
+    <div id="cs-drawer">
+      <button id="cs-close" aria-label="Close">✕</button>
+      <div id="cs-content"></div>
+    </div>
+  </div>
 
   <script src="js/scene.js"></script>
   <script src="js/animations.js"></script>

@@ -87,12 +87,19 @@
       });
     });
 
-    /* ── Project atmosphere shifts ──────────────────────────── */
+    /* ── Project atmosphere shifts (scroll-driven, more pronounced) ── */
     document.querySelectorAll('.section-project').forEach(section => {
+      const color = section.dataset.atmosphereColor || 'rgba(46,91,255,0.06)';
       ScrollTrigger.create({
         trigger: section,
-        start: 'top 60%',
-        end: 'bottom 40%',
+        start: 'top 70%',
+        end: 'bottom 30%',
+        scrub: 1.5,
+        onUpdate: (self) => {
+          const p = self.progress < 0.5 ? self.progress * 2 : 2 - self.progress * 2;
+          const opacity = Math.min(p * 0.1, 0.1);
+          section.style.background = color.replace(/[\d.]+\)$/, opacity + ')');
+        },
         onEnter: () => section.classList.add('atmosphere-active'),
         onLeave: () => section.classList.remove('atmosphere-active'),
         onEnterBack: () => section.classList.add('atmosphere-active'),

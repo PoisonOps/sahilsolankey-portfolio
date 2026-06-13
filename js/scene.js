@@ -160,6 +160,13 @@
     camera.position.y = camY;
     camera.lookAt(0, 0, 0);
 
+    /* Sound-reactive particle breathing */
+    if (window.Sound && window.Sound.active) {
+      const breathAmt = 0.5 + 0.5 * Math.sin(Date.now() * 0.000408); /* 0.065Hz — matches audio LFO */
+      particleMat.size = 0.12 + breathAmt * 0.06;
+      particleMat.opacity = 0.28 + breathAmt * 0.12;
+    }
+
     renderer.render(scene, camera);
     rafId = requestAnimationFrame(tick);
   }

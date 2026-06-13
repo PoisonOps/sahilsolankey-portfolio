@@ -6,6 +6,77 @@ const POSTROOM_URL = 'FILL_ME_IN'; /* Sahil: replace with your Postroom Vercel U
 
 const WA_URL = 'https://wa.me/917080442040?text=Hi%20Sahil%2C%20I%20saw%20your%20portfolio%20and%20want%20to%20discuss%20a%20project.';
 
+const CASE_STUDIES = {
+  catalyst: {
+    eyebrow: 'Project 01 · EdTech SaaS',
+    title: 'CATalyst',
+    tagline: 'A mistake-fixing system for CAT aspirants.',
+    color: '#2E5BFF',
+    problem: 'CAT aspirants practice 100s of questions but keep repeating the same errors. No existing app forced them to confront and fix their mistake patterns.',
+    solution: 'Built a "Fix Mode" loop: every wrong answer gets logged, diagnosed, and drilled in a structured re-attempt session. The system makes mistakes visible and costly — psychologically.',
+    metrics: [
+      { val: '794', label: 'Questions live' },
+      { val: '3 days', label: 'Free trial' },
+      { val: '₹489', label: 'One-time price' },
+    ],
+    stack: ['Vanilla JS SPA', 'Supabase', 'Vercel Serverless', 'Web Push', 'PWA', 'GSAP'],
+    honesty: 'I should have shipped with 200 questions, not 794. Spent too long on content. The fix mode loop was right from day one — I should have validated it with 50 questions first.',
+    live: 'https://catalyst-app-six.vercel.app',
+    github: 'https://github.com/PoisonOps',
+  },
+  gharkhata: {
+    eyebrow: 'Project 02 · Fintech PWA',
+    title: 'GharKhata',
+    tagline: 'Shared expense tracking for couples. Works offline.',
+    color: '#00C853',
+    problem: 'Couples share expenses daily but have no lightweight way to track splits without either a complex app or a messy WhatsApp thread.',
+    solution: 'A PWA with offline-first sync. One person logs an expense, it syncs when either partner comes online. Built in 2 days from idea to deployed.',
+    metrics: [
+      { val: '2 days', label: 'Idea to live' },
+      { val: '13', label: 'Unit tests' },
+      { val: '100%', label: 'Offline capable' },
+    ],
+    stack: ['React PWA', 'IndexedDB', 'Supabase', 'Service Worker', 'Workbox'],
+    honesty: 'The sync conflict resolution is too simple — last write wins. Real couples editing simultaneously can lose data. I\'d use CRDTs if I rebuilt this.',
+    live: 'https://gharkhata.vercel.app',
+    github: 'https://github.com/PoisonOps',
+  },
+  pitchready: {
+    eyebrow: 'Project 03 · Sports Analytics',
+    title: 'PitchReady',
+    tagline: 'Cricket performance tracking for club players.',
+    color: '#FF8F00',
+    problem: 'Club-level cricketers have no structured way to track their innings data, training sessions, or form trends over a season.',
+    solution: 'A mobile-first stats tracker with innings logging, form rings, and training module progress. Shipped in 1 day as a focused MVP.',
+    metrics: [
+      { val: '1 day', label: 'Idea to live' },
+      { val: '5', label: 'Core screens' },
+      { val: '100%', label: 'Mobile-first' },
+    ],
+    stack: ['React Native', 'Expo', 'Supabase', 'Recharts'],
+    honesty: 'The training module is just a progress bar — not connected to any real session data. I shipped the shell first. The right call was to validate with real players before building the data layer.',
+    live: 'https://pitchready-app.vercel.app',
+    github: 'https://github.com/PoisonOps',
+  },
+  postroom: {
+    eyebrow: 'Project 04 · Design Tool',
+    title: 'Postroom',
+    tagline: 'Visual storytelling studio for content creators.',
+    color: '#E8DCC0',
+    problem: 'Content creators need to produce polished visual stories but existing tools are either too complex (Figma) or too limiting (Canva).',
+    solution: 'Designed and shipped a focused web-based design studio with layer management, typography controls, and one-click publish. Shipped the complete design system in days.',
+    metrics: [
+      { val: 'Days', label: 'Design to ship' },
+      { val: '6', label: 'Core tool panels' },
+      { val: '1-click', label: 'Publish flow' },
+    ],
+    stack: ['React', 'Fabric.js', 'Tailwind', 'Vercel'],
+    honesty: 'The "publish" feature is mostly UI — the actual content delivery pipeline wasn\'t built. I should have validated whether creators wanted the tool before building the full editor.',
+    live: 'FILL_ME_IN',
+    github: 'https://github.com/PoisonOps',
+  },
+};
+
 const MARQUEE_ITEMS = [
   '● CATalyst — live with paying users',
   '● GharKhata shipped in 2 days',
@@ -2496,9 +2567,246 @@ function initPostroomLink() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   INTRO LOADER (terminal typewriter)
+   ═══════════════════════════════════════════════════════════════════ */
+function initIntroLoader() {
+  if (sessionStorage.getItem('intro_seen')) {
+    document.getElementById('intro-loader').classList.add('done');
+    return;
+  }
+  const lines = [
+    { el: document.getElementById('iline1'), text: 'boot sahilsolankey.dev', delay: 200, speed: 45 },
+    { el: document.getElementById('iline2'), text: 'loading: full-stack engineer...', delay: 900, speed: 38 },
+    { el: document.getElementById('iline3'), text: 'status: AVAILABLE ✓', delay: 1900, speed: 42, success: true },
+  ];
+  let dismissed = false;
+  function dismiss() {
+    if (dismissed) return;
+    dismissed = true;
+    sessionStorage.setItem('intro_seen', '1');
+    document.getElementById('intro-loader').classList.add('done');
+  }
+  function typeText(el, text, speed, done) {
+    let i = 0;
+    const iv = setInterval(() => {
+      el.textContent = text.slice(0, ++i);
+      if (i >= text.length) { clearInterval(iv); done && done(); }
+    }, speed);
+  }
+  lines.forEach(l => {
+    setTimeout(() => {
+      if (dismissed) return;
+      typeText(l.el, l.text, l.speed, () => {
+        l.el.classList.add(l.success ? 'success' : 'done');
+      });
+    }, l.delay);
+  });
+  /* Auto-dismiss 1s after last line finishes */
+  const totalMs = lines[2].delay + lines[2].text.length * lines[2].speed + 1000;
+  setTimeout(dismiss, totalMs);
+  document.addEventListener('keydown', dismiss, { once: true });
+  document.getElementById('intro-loader').addEventListener('click', dismiss);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLL PROGRESS BAR
+   ═══════════════════════════════════════════════════════════════════ */
+function initScrollProgress() {
+  const bar = document.getElementById('scroll-progress');
+  if (!bar) return;
+  window.addEventListener('scroll', () => {
+    const pct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+    bar.style.transform = 'scaleX(' + Math.min(pct, 1) + ')';
+  }, { passive: true });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CASE STUDY DRAWER
+   ═══════════════════════════════════════════════════════════════════ */
+function initCaseStudyDrawer() {
+  const overlay = document.getElementById('cs-overlay');
+  const content = document.getElementById('cs-content');
+  if (!overlay) return;
+
+  function open(key) {
+    const cs = CASE_STUDIES[key];
+    if (!cs) return;
+    content.innerHTML =
+      '<div class="cs-eyebrow">' + cs.eyebrow + '</div>' +
+      '<div class="cs-title">' + cs.title + '</div>' +
+      '<div class="cs-tagline">' + cs.tagline + '</div>' +
+      '<div class="cs-section"><h4>The Problem</h4><p>' + cs.problem + '</p></div>' +
+      '<div class="cs-section"><h4>The Solution</h4><p>' + cs.solution + '</p></div>' +
+      '<div class="cs-metrics">' +
+        cs.metrics.map(function(m) {
+          return '<div class="cs-metric"><span class="cs-metric-val">' + m.val + '</span><div class="cs-metric-label">' + m.label + '</div></div>';
+        }).join('') +
+      '</div>' +
+      '<div class="cs-section"><h4>Tech Stack</h4><div class="cs-stack">' +
+        cs.stack.map(function(s) { return '<span>' + s + '</span>'; }).join('') +
+      '</div></div>' +
+      '<div class="cs-section"><h4>What I\'d do differently</h4><div class="cs-honesty">' + cs.honesty + '</div></div>' +
+      '<div class="cs-links">' +
+        '<a href="' + cs.live + '" target="_blank" rel="noopener" class="cs-live">View live →</a>' +
+        '<a href="' + cs.github + '" target="_blank" rel="noopener" class="cs-gh">GitHub ↗</a>' +
+      '</div>';
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    if (window.Sound && Sound.playPing) Sound.playPing();
+  }
+
+  function close() {
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('cs-close').addEventListener('click', close);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(); });
+
+  document.querySelectorAll('[data-cs]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) { e.preventDefault(); open(btn.dataset.cs); });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MINI TIMELINE
+   ═══════════════════════════════════════════════════════════════════ */
+function initTimelineMini() {
+  document.querySelectorAll('.tmi[data-color]').forEach(function(el) {
+    el.style.setProperty('--tmi-color', el.dataset.color);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PROJECT CAROUSEL (mobile)
+   ═══════════════════════════════════════════════════════════════════ */
+function initProjectCarousel() {
+  const wrap = document.getElementById('projects-carousel');
+  const dots = document.querySelectorAll('.carousel-dot');
+  if (!wrap || !dots.length) return;
+  const sections = wrap.querySelectorAll('.section-project');
+
+  const io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        const idx = Array.from(sections).indexOf(entry.target);
+        dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+      }
+    });
+  }, { root: null, threshold: 0.5 });
+
+  sections.forEach(function(s) { io.observe(s); });
+  dots.forEach(function(dot) {
+    dot.addEventListener('click', function() {
+      const s = sections[+dot.dataset.idx];
+      if (s) s.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FORM SUGGESTION PILLS
+   ═══════════════════════════════════════════════════════════════════ */
+function initFormPills() {
+  document.querySelectorAll('.form-pill').forEach(function(pill) {
+    pill.addEventListener('click', function() {
+      const ta = document.getElementById('field-idea');
+      if (!ta) return;
+      ta.value = pill.dataset.text;
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FAST DEMO (7-day countdown)
+   ═══════════════════════════════════════════════════════════════════ */
+function initFastDemo() {
+  const el = document.getElementById('fast-date');
+  if (!el) return;
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  el.textContent = d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════════════════════ */
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.className = 'toast-show';
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(function() { t.className = ''; }, 2500);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   COPY EMAIL BUTTON
+   ═══════════════════════════════════════════════════════════════════ */
+function initCopyEmail() {
+  const el = document.getElementById('footer-email');
+  if (!el) return;
+  el.style.cursor = 'pointer';
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    navigator.clipboard.writeText('sahilsolankey1009@gmail.com').then(function() {
+      showToast('Email copied!');
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FAVICON ANIMATION
+   ═══════════════════════════════════════════════════════════════════ */
+function initFaviconAnimation() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32; canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  let link = document.querySelector("link[rel*='icon']");
+  if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+
+  let frame = 0;
+  let hidden = false;
+  document.addEventListener('visibilitychange', function() { hidden = document.hidden; });
+
+  function drawFavicon() {
+    ctx.clearRect(0, 0, 32, 32);
+    ctx.fillStyle = '#050810';
+    ctx.fillRect(0, 0, 32, 32);
+    ctx.fillStyle = '#E9E5DC';
+    ctx.font = 'bold 20px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('S', 16, 17);
+    if (hidden) {
+      const pulse = 0.5 + 0.5 * Math.sin(frame * 0.08);
+      ctx.fillStyle = 'rgba(232,130,12,' + (0.7 + pulse * 0.3) + ')';
+      ctx.beginPath();
+      ctx.arc(26, 6, 4 + pulse * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    link.href = canvas.toDataURL();
+    frame++;
+    requestAnimationFrame(drawFavicon);
+  }
+  drawFavicon();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════════════ */
 function boot() {
+  initIntroLoader();
+  initScrollProgress();
   initMarquee();
   initCursor();
   initHeroGradient();
@@ -2511,6 +2819,13 @@ function boot() {
   initSmoothScroll();
   initPostroomLink();
   initTimeline();
+  initCaseStudyDrawer();
+  initTimelineMini();
+  initProjectCarousel();
+  initFormPills();
+  initFastDemo();
+  initCopyEmail();
+  initFaviconAnimation();
 }
 
 if (document.readyState === 'loading') {
