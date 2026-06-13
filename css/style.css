@@ -715,29 +715,23 @@ section { position: relative; }
 .services-header { text-align: center; margin-bottom: 72px; }
 .services-eyebrow { margin-bottom: 16px; }
 
-/* CSS 3D Constellation */
+/* CSS 3D Constellation — no full rotation, mouse parallax via JS */
 .constellation-wrap {
-  height: 520px;
+  height: 580px;
   position: relative;
-  perspective: 900px;
-  perspective-origin: 50% 40%;
+  perspective: 1100px;
+  perspective-origin: 50% 42%;
   margin-bottom: 80px;
-  overflow: hidden;
+  overflow: visible; /* cards can extend beyond container bounds */
 }
 
 .constellation-stage {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  animation: constellation-rotate 60s linear infinite;
+  transform: rotateX(5deg) rotateY(-5deg);
+  will-change: transform;
 }
-
-@keyframes constellation-rotate {
-  from { transform: rotateY(0deg); }
-  to   { transform: rotateY(360deg); }
-}
-
-.constellation-wrap:hover .constellation-stage { animation-play-state: paused; }
 
 /* Individual device cards in 3D space */
 .cs-device {
@@ -754,6 +748,8 @@ section { position: relative; }
   position: relative;
   transition: border-color 0.3s, box-shadow 0.3s;
   box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .cs-device:hover .cs-device-inner {
@@ -847,7 +843,9 @@ section { position: relative; }
 /* Remove bottom border from last row */
 .service-tile:nth-child(n+4) { border-bottom: none; }
 
-.service-tile:hover { background: rgba(255,255,255,0.015); }
+.service-tile:hover { background: rgba(255,255,255,0.018); }
+.service-tile:hover .tile-canvas-wrap { border-color: rgba(232,130,12,0.2); box-shadow: 0 0 24px rgba(232,130,12,0.06); }
+.service-tile:hover .tile-name { color: var(--accent); }
 
 .tile-canvas-wrap {
   width: 100%;
@@ -867,6 +865,7 @@ section { position: relative; }
   font-size: 1.1rem;
   color: var(--text);
   margin-top: 4px;
+  transition: color 0.25s;
 }
 
 .tile-desc { font-size: 0.88rem; line-height: 1.6; color: var(--text-dim); }
@@ -992,6 +991,11 @@ section { position: relative; }
 }
 
 .timeline-day:last-child { border-right: none; }
+.timeline-day { cursor: default; transition: background 0.25s; }
+.timeline-day:hover { background: rgba(232,130,12,0.04); }
+.timeline-day.active-day { background: rgba(232,130,12,0.06); }
+.timeline-day.active-day .day-number { color: var(--accent); }
+.timeline-day.active-day .day-item { color: var(--text); }
 
 .day-number {
   font-family: 'JetBrains Mono', monospace;

@@ -131,40 +131,42 @@ function initConstellation() {
 
   const isMobile = window.SceneState?.isMobile;
 
-  /* Device definitions: label, aspect ratio, canvas draw function, 3D position */
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* All cards stay within ±55° so they never face backwards (no mirroring) */
   const devices = [
     {
       label: 'MacBook Pro',
-      width: 260, height: 168,
-      /* 3D transform: X Y Z, rotateY, rotateX */
-      style: 'left:50%;top:50%;transform:translate(-50%,-55%) rotateY(-25deg) rotateX(8deg) translateZ(0px)',
+      width: 290, height: 186,
+      /* Front-center, closest */
+      style: 'left:50%;top:50%;transform:translate(-50%,-52%) translateZ(100px)',
       isLaptop: true,
       draw: drawDashboard,
     },
     {
       label: 'iPhone 15',
-      width: 90, height: 195,
-      style: 'left:78%;top:52%;transform:translate(-50%,-45%) rotateY(15deg) rotateX(-4deg) translateZ(60px)',
+      width: 88, height: 192,
+      style: 'left:80%;top:57%;transform:translate(-50%,-50%) rotateY(36deg) translateZ(18px)',
       draw: drawMobileApp,
     },
     {
       label: 'Android',
-      width: 88, height: 190,
-      style: 'left:22%;top:58%;transform:translate(-50%,-45%) rotateY(-15deg) rotateX(4deg) translateZ(40px)',
+      width: 86, height: 190,
+      style: 'left:20%;top:60%;transform:translate(-50%,-50%) rotateY(-36deg) translateZ(18px)',
       draw: drawChatApp,
     },
     {
       label: 'iPad Pro',
-      width: 200, height: 155,
-      style: 'left:75%;top:20%;transform:translate(-50%,-50%) rotateY(20deg) rotateX(12deg) translateZ(-40px)',
-      opacity: 0.6,
+      width: 208, height: 158,
+      style: 'left:77%;top:22%;transform:translate(-50%,-50%) rotateY(50deg) rotateX(4deg) translateZ(-20px)',
+      opacity: 0.65,
       draw: drawAnalytics,
     },
     {
       label: 'Windows',
-      width: 220, height: 145,
-      style: 'left:25%;top:22%;transform:translate(-50%,-50%) rotateY(-20deg) rotateX(10deg) translateZ(-60px)',
-      opacity: 0.55,
+      width: 222, height: 146,
+      style: 'left:24%;top:24%;transform:translate(-50%,-50%) rotateY(-50deg) rotateX(4deg) translateZ(-20px)',
+      opacity: 0.62,
       draw: drawDashboard,
     },
   ];
@@ -238,6 +240,29 @@ function initConstellation() {
 
     animate();
   });
+
+  /* Mouse-driven parallax — keeps cards always visible (never rotates full 360°) */
+  if (!prefersReduced) {
+    let tRY = -5, tRX = 5, cRY = -5, cRX = 5;
+
+    const onMove = e => {
+      const rect = wrap.getBoundingClientRect();
+      const nx = (e.clientX - rect.left) / rect.width - 0.5;
+      const ny = (e.clientY - rect.top)  / rect.height - 0.5;
+      tRY = -5 + nx * 18; /* ±9° around -5° default */
+      tRX =  5 - ny * 12; /* ±6° around 5° default */
+    };
+
+    wrap.addEventListener('mousemove', onMove);
+    wrap.addEventListener('mouseleave', () => { tRY = -5; tRX = 5; });
+
+    (function animStage() {
+      cRY += (tRY - cRY) * 0.05;
+      cRX += (tRX - cRX) * 0.05;
+      stage.style.transform = `rotateX(${cRX.toFixed(3)}deg) rotateY(${cRY.toFixed(3)}deg)`;
+      requestAnimationFrame(animStage);
+    })();
+  }
 
   /* Build mobile constellation */
   const mobileWrap = document.getElementById('constellation-mobile');
@@ -1151,6 +1176,67 @@ const TECH_LOGOS = [
     glow: 'rgba(45,195,95,0.5)',
     svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#0d1a10"/><path d="M12 4C7.58 4 4 7.58 4 12s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" fill="#2DC35F"/><path d="M10 9l5 3-5 3V9z" fill="#2DC35F"/></svg>`,
   },
+  /* ── New additions ── */
+  {
+    name: 'Claude API',
+    glow: 'rgba(232,130,12,0.75)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#160e04"/><circle cx="12" cy="9.5" r="4.5" fill="none" stroke="#E8820C" stroke-width="1.6"/><circle cx="12" cy="9.5" r="1.8" fill="#E8820C"/><path d="M8.5 16.5c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5" stroke="#E8820C" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  },
+  {
+    name: 'OpenAI',
+    glow: 'rgba(16,163,127,0.7)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0a1a16"/><path d="M12 5l6.5 3.75v7.5L12 19.75 5.5 16.25v-7.5z" fill="none" stroke="#10A37F" stroke-width="1.4"/><circle cx="12" cy="12" r="2.8" fill="#10A37F"/><path d="M12 8.5V5M15.5 10.25l3-1.75M15.5 13.75l3 1.75M12 15.5v3.25M8.5 13.75l-3 1.75M8.5 10.25l-3-1.75" stroke="#10A37F" stroke-width="1" opacity="0.5" stroke-linecap="round"/></svg>`,
+  },
+  {
+    name: 'Docker',
+    glow: 'rgba(36,150,237,0.7)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#06111a"/><rect x="3.5" y="9" width="3.5" height="3.5" rx="0.6" fill="#2496ED"/><rect x="8" y="9" width="3.5" height="3.5" rx="0.6" fill="#2496ED"/><rect x="12.5" y="9" width="3.5" height="3.5" rx="0.6" fill="#2496ED"/><rect x="8" y="4.5" width="3.5" height="3.5" rx="0.6" fill="#2496ED"/><rect x="12.5" y="4.5" width="3.5" height="3.5" rx="0.6" fill="#2496ED"/><path d="M20 10.5s1.5.5 1.5 2-2 3.5-5 4H3.5" stroke="#2496ED" stroke-width="1.2" fill="none" stroke-linecap="round"/><path d="M1.5 12c.5-1.5 2-2 3.5-2" stroke="#2496ED" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`,
+  },
+  {
+    name: 'PostgreSQL',
+    glow: 'rgba(51,103,145,0.7)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#080f18"/><ellipse cx="12" cy="8" rx="6.5" ry="3.5" fill="none" stroke="#336791" stroke-width="1.4"/><path d="M5.5 8v8c0 1.93 2.91 3.5 6.5 3.5s6.5-1.57 6.5-3.5V8" stroke="#336791" stroke-width="1.4" fill="none"/><path d="M5.5 12c0 1.93 2.91 3.5 6.5 3.5s6.5-1.57 6.5-3.5" stroke="#336791" stroke-width="1" fill="none" opacity="0.5"/></svg>`,
+  },
+  {
+    name: 'Stripe',
+    glow: 'rgba(99,91,255,0.7)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0d0c1a"/><path d="M10.5 9.5c0-.9.73-1.5 2-1.5 1.8 0 3.6.7 4.9 1.4l.7-4.4C16.7 4.2 14.6 3.5 12 3.5c-2 0-3.7.55-4.9 1.55C5.8 6.2 5.2 7.7 5.2 9.5c0 3.2 2 4.6 5.2 5.8 2.1.75 2.8 1.3 2.8 2.1 0 .8-.68 1.25-1.9 1.25-1.5 0-4-.75-5.6-1.7l-.7 4.45C6.3 22.4 8.8 23.2 11.7 23.2c2.1 0 3.9-.5 5.1-1.45C18.1 20.6 18.8 19.1 18.8 17c0-3.3-2.02-4.7-5.3-5.85-2.1-.74-2.8-1.2-2.8-1.95l-.2-.7z" fill="#635BFF"/></svg>`,
+  },
+  {
+    name: 'Prisma',
+    glow: 'rgba(200,200,255,0.4)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0d0d16"/><path d="M4 19L12 3l8 16H4z" fill="none" stroke="white" stroke-width="1.4" stroke-linejoin="round"/><path d="M4 19l8-9" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  },
+  {
+    name: 'shadcn/ui',
+    glow: 'rgba(255,255,255,0.35)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0f0f0f"/><rect x="5" y="7" width="14" height="2" rx="1" fill="white" opacity="0.9"/><rect x="5" y="11" width="10" height="2" rx="1" fill="white" opacity="0.55"/><rect x="5" y="15" width="12" height="2" rx="1" fill="white" opacity="0.55"/><rect x="18" y="13" width="1.5" height="6" rx="0.75" fill="white" opacity="0.3"/></svg>`,
+  },
+  {
+    name: 'Framer Motion',
+    glow: 'rgba(5,102,255,0.6)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#06091a"/><path d="M6 3h12v7.5H12zm0 7.5h6L6 21z" fill="#0566FF"/></svg>`,
+  },
+  {
+    name: 'React Query',
+    glow: 'rgba(255,68,68,0.6)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#1a0505"/><path d="M12 5a7 7 0 100 14A7 7 0 0012 5zm0 2a5 5 0 110 10A5 5 0 0112 7z" fill="#FF4444" opacity="0.4"/><path d="M12 9a3 3 0 100 6 3 3 0 000-6z" fill="#FF4444"/><path d="M18.5 5.5L20 4" stroke="#FF4444" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  },
+  {
+    name: 'Zustand',
+    glow: 'rgba(255,160,50,0.6)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#160f04"/><circle cx="12" cy="10" r="5.5" fill="none" stroke="#FFA032" stroke-width="1.5"/><circle cx="10" cy="9" r="1.2" fill="#FFA032"/><circle cx="14" cy="9" r="1.2" fill="#FFA032"/><path d="M9.5 12.5s.8 1.5 2.5 1.5 2.5-1.5 2.5-1.5" stroke="#FFA032" stroke-width="1.2" fill="none" stroke-linecap="round"/><path d="M10 17v2M14 17v2" stroke="#FFA032" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  },
+  {
+    name: 'Astro',
+    glow: 'rgba(255,80,5,0.6)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#12080a"/><path d="M9.5 15c.5-3 1.5-6.5 3-9 .4-.7.8-1 1-1s.6.3 1 1c1.5 2.5 2.5 6 3 9C16.5 17 14.5 18 12 18s-4.5-1-2.5-3z" fill="#FF5005" opacity="0.85"/><path d="M10 14c.8-1 3.2-1 4 0" stroke="#FF5005" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.6"/></svg>`,
+  },
+  {
+    name: 'Python',
+    glow: 'rgba(55,118,171,0.7)',
+    svg: `<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#080f18"/><path d="M12 3c-3 0-5 1-5 3v2h5v1H7c-2 0-4 1.5-4 4s2 4 4 4h1v-2H7c-1 0-1.5-.5-1.5-2S6 11 7 11h10c1 0 2-1 2-2V6c0-2-2-3-5-3l-2 0zM9.5 5.5a1 1 0 110 2 1 1 0 010-2z" fill="#3776AB"/><path d="M12 21c3 0 5-1 5-3v-2h-5v-1h5c2 0 4-1.5 4-4s-2-4-4-4h-1v2h1c1 0 1.5.5 1.5 2S18 13 17 13H7c-1 0-2 1-2 2v3c0 2 2 3 5 3l2 0zM14.5 18.5a1 1 0 110-2 1 1 0 010 2z" fill="#FFD43B"/></svg>`,
+  },
 ];
 
 function initTechLogos() {
@@ -1336,6 +1422,59 @@ function initSmoothScroll() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   TIMELINE — auto-advance + hover interactivity
+   ═══════════════════════════════════════════════════════════════════ */
+function initTimeline() {
+  const days = document.querySelectorAll('#timeline-desktop .timeline-day');
+  if (!days.length) return;
+
+  let autoIdx = 0, isHovering = false, timerId;
+
+  function activate(idx) {
+    days.forEach((d, i) => {
+      d.classList.toggle('lit', i <= idx);
+      d.classList.toggle('active-day', i === idx);
+    });
+  }
+
+  function step() {
+    if (!isHovering) {
+      activate(autoIdx);
+      autoIdx = (autoIdx + 1) % (days.length + 2); /* pause at end before reset */
+      if (autoIdx >= days.length) {
+        /* Hold on "all lit" for 2 ticks, then reset */
+        if (autoIdx === days.length + 1) autoIdx = 0;
+      }
+    }
+  }
+
+  days.forEach((day, i) => {
+    day.addEventListener('mouseenter', () => {
+      isHovering = true;
+      activate(i);
+    });
+    day.addEventListener('mouseleave', () => {
+      isHovering = false;
+    });
+  });
+
+  /* Start auto-advance when section scrolls into view */
+  const section = document.getElementById('timeline-desktop');
+  if (section) {
+    new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        if (!timerId) timerId = setInterval(step, 850);
+      } else {
+        clearInterval(timerId);
+        timerId = null;
+        autoIdx = 0;
+        days.forEach(d => { d.classList.remove('lit', 'active-day'); });
+      }
+    }, { threshold: 0.3 }).observe(section);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    POSTROOM LINK
    ═══════════════════════════════════════════════════════════════════ */
 function initPostroomLink() {
@@ -1358,6 +1497,7 @@ function boot() {
   initFAB();
   initSmoothScroll();
   initPostroomLink();
+  initTimeline();
 }
 
 if (document.readyState === 'loading') {
