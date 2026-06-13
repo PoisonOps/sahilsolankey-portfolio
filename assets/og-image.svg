@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#050810"/>
+  <rect x="0" y="0" width="1200" height="630" fill="url(#grad)"/>
+  <defs>
+    <radialGradient id="grad" cx="30%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#E8820C" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#050810" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Border -->
+  <rect x="1" y="1" width="1198" height="628" fill="none" stroke="#1A1E2A" stroke-width="2"/>
+  <!-- Eyebrow -->
+  <text x="80" y="200" font-family="'Courier New', monospace" font-size="18" fill="#8A8FA3" letter-spacing="4">FULL-STACK DEVELOPER &amp; AI ENGINEER</text>
+  <!-- Main headline -->
+  <text x="80" y="300" font-family="Georgia, serif" font-size="72" fill="#E9E5DC" font-weight="400">Sahil Solankey</text>
+  <text x="80" y="380" font-family="Georgia, serif" font-size="48" fill="#E8820C" font-weight="400">I build products in 7 days.</text>
+  <!-- Sub -->
+  <text x="80" y="450" font-family="'Courier New', monospace" font-size="20" fill="#8A8FA3">4 live products · Web · Mobile · Desktop · AI</text>
+  <!-- URL -->
+  <text x="80" y="560" font-family="'Courier New', monospace" font-size="16" fill="#4ADE80">sahilsolankey.vercel.app</text>
+  <!-- Live dot -->
+  <circle cx="60" cy="556" r="6" fill="#4ADE80"/>
+</svg>

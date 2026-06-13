@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>Sahil Solankey — I build products in 7 days</title>
+  <meta name="description" content="Full-stack developer &amp; AI engineer. Four live products shipped solo. Web, mobile, desktop, AI — idea to deployed in 7 days." />
+
+  <!-- OG / Twitter -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://sahilsolankey.vercel.app" />
+  <meta property="og:title" content="Sahil Solankey — I build products in 7 days" />
+  <meta property="og:description" content="Full-stack developer &amp; AI engineer. Four live products shipped solo. Web, mobile, desktop, AI — idea to deployed in 7 days." />
+  <meta property="og:image" content="https://sahilsolankey.vercel.app/assets/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Sahil Solankey — I build products in 7 days" />
+  <meta name="twitter:description" content="Full-stack developer &amp; AI engineer. Four live products shipped solo. Web, mobile, desktop, AI — idea to deployed in 7 days." />
+  <meta name="twitter:image" content="https://sahilsolankey.vercel.app/assets/og-image.png" />
+
+  <!-- Favicon (SS monogram SVG) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23050810'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='14' fill='%23E8820C'>SS</text></svg>" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Custom cursor (desktop only, injected by main.js) -->
+  <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+
+  <!-- WebGL canvas (shared, full-screen, behind all content) -->
+  <canvas id="webgl-canvas" aria-hidden="true"></canvas>
+
+  <!-- Tech graph tooltip -->
+  <div class="tech-tooltip" id="tech-tooltip" aria-hidden="true"></div>
+
+  <!-- Floating WhatsApp button -->
+  <a class="fab-whatsapp" id="fab-whatsapp"
+     href="https://wa.me/917080442040?text=Hi%20Sahil%2C%20I%20saw%20your%20portfolio%20and%20want%20to%20discuss%20a%20project."
+     target="_blank" rel="noopener"
+     aria-label="Chat on WhatsApp">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  </a>
+
+  <!-- ====================================================
+       MARQUEE BAR
+       ==================================================== -->
+  <div class="marquee-bar" aria-label="Latest news ticker">
+    <div class="marquee-track" id="marquee-track">
+      <!-- Content injected by main.js -->
+    </div>
+  </div>
+
+  <!-- ====================================================
+       NAV
+       ==================================================== -->
+  <header>
+    <nav class="site-nav" aria-label="Main navigation">
+      <div class="nav-inner">
+        <a class="nav-logo" href="#" aria-label="Sahil Solankey — home">Sahil Solankey</a>
+        <div class="nav-right">
+          <button class="sound-toggle" id="sound-toggle" aria-label="Toggle ambient sound" aria-pressed="false">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect class="bar bar1" x="1" y="4" width="2.5" height="8" rx="1.25" fill="currentColor"/>
+              <rect class="bar bar2" x="5" y="2" width="2.5" height="12" rx="1.25" fill="currentColor"/>
+              <rect class="bar bar3" x="9" y="5" width="2.5" height="7" rx="1.25" fill="currentColor"/>
+              <rect class="bar bar4" x="13" y="3" width="2.5" height="10" rx="1.25" fill="currentColor"/>
+            </svg>
+            Sound
+          </button>
+          <div class="live-indicator" aria-label="Currently available for projects">
+            <span class="live-dot" aria-hidden="true"></span>
+            Available
+          </div>
+          <a class="btn-whatsapp"
+             href="https://wa.me/917080442040?text=Hi%20Sahil%2C%20I%20saw%20your%20portfolio%20and%20want%20to%20discuss%20a%20project."
+             target="_blank" rel="noopener"
+             aria-label="Contact Sahil on WhatsApp">
+            <span class="nav-wa-text">WhatsApp</span> →
+          </a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ====================================================
+         HERO
+         ==================================================== -->
+    <section class="section-hero" id="hero" aria-label="Hero — introduction">
+      <div class="hero-mobile-glow" aria-hidden="true"></div>
+      <div class="hero-inner">
+
+        <div class="hero-left">
+          <p class="t-eyebrow hero-eyebrow reveal-up">Full-Stack Developer &amp; AI Engineer</p>
+
+          <h1 class="hero-headline reveal-up">
+            I build the product<br>
+            you've been planning<br>
+            in Notion for 6 months.<br>
+            <span class="accent-line">In 7 days.</span>
+          </h1>
+
+          <div class="hero-ctas reveal-up">
+            <a class="btn-primary"
+               href="https://wa.me/917080442040?text=Hi%20Sahil%2C%20I%20saw%20your%20portfolio%20and%20want%20to%20discuss%20a%20project."
+               target="_blank" rel="noopener">
+              Start your build →
+            </a>
+            <a class="btn-ghost" href="#projects">
+              See the work ↓
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-right" aria-hidden="true">
+          <div class="devices-wrap" id="hero-devices">
+            <div class="device-laptop">
+              <div class="laptop-lid screen-slide-outer" id="laptop-screen">
+                <div class="video-placeholder">
+                  <span class="vp-name">CATalyst</span>
+                  <span>· video coming soon</span>
+                </div>
+              </div>
+              <div class="laptop-bezel"></div>
+            </div>
+            <div class="device-phone">
+              <div class="phone-screen" id="phone-screen">
+                <div class="video-placeholder">
+                  <span class="vp-name">GharKhata</span>
+                  <span>· video coming soon</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====================================================
+         PROOF STRIP
+         ==================================================== -->
+    <section class="section-proof" aria-label="Stats and proof points">
+      <div class="proof-grid content-wrap">
+        <div class="proof-item">
+          <div class="proof-number" data-target="4" data-prefix="" data-suffix="">4</div>
+          <div class="proof-label">Products Shipped</div>
+        </div>
+        <div class="proof-item">
+          <div class="proof-number" data-target="1" data-prefix="" data-suffix=" DAY">1 DAY</div>
+          <div class="proof-label">Fastest Ship</div>
+        </div>
+        <div class="proof-item">
+          <div class="proof-number" data-target="68" data-prefix="" data-suffix="">68</div>
+          <div class="proof-label">Commits on Catalyst</div>
+        </div>
+        <div class="proof-item">
+          <div class="proof-number" data-target="100" data-prefix="" data-suffix="%">100%</div>
+          <div class="proof-label">Solo — Design to Deploy</div>
+        </div>
+        <div class="proof-item">
+          <div class="proof-number" data-target="489" data-prefix="₹" data-suffix="">₹489</div>
+          <div class="proof-label">First Revenue Earned</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         PROJECTS
+         ==================================================== -->
+    <div class="projects-container" id="projects">
+
+      <!-- Project 01: CATalyst -->
+      <section class="section-project" data-project="catalyst" id="project-catalyst" aria-label="Project: CATalyst">
+        <div class="project-inner">
+          <div class="project-left">
+            <p class="t-eyebrow reveal-up">Project 01 — EdTech SaaS · Revenue-Generating</p>
+            <h2 class="project-name reveal-up">CATalyst</h2>
+            <p class="project-desc reveal-up">A mistake-fixing system for CAT exam aspirants. Not a practice app — a system that catches your repeated errors and forces you to fix them.</p>
+            <div class="project-metrics reveal-up">
+              <span class="metric-chip">30 days of iteration</span>
+              <span class="metric-chip">68 commits</span>
+              <span class="metric-chip">20+ deploys</span>
+              <span class="metric-chip live-badge"><span class="live-dot" aria-hidden="true"></span>LIVE with paying users</span>
+            </div>
+            <div class="tech-pills reveal-up">
+              <span class="tech-pill">Vanilla JS SPA</span>
+              <span class="tech-pill">Supabase</span>
+              <span class="tech-pill">Vercel Serverless</span>
+              <span class="tech-pill">Web Push</span>
+              <span class="tech-pill">PWA</span>
+              <span class="tech-pill">GSAP</span>
+            </div>
+            <a class="project-link reveal-up" href="https://catalyst-app-six.vercel.app" target="_blank" rel="noopener" aria-label="View CATalyst live">
+              View live →
+            </a>
+          </div>
+          <div class="project-right" aria-hidden="true">
+            <div class="project-device-wrap">
+              <div class="device-laptop">
+                <div class="laptop-lid screen-slide-outer">
+                  <div class="screen-content" data-project="catalyst">
+                    <div class="video-placeholder">
+                      <span class="vp-name">CATalyst</span>
+                      <span>· video coming soon</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="laptop-bezel"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Project 02: GharKhata -->
+      <section class="section-project" data-project="gharkhata" id="project-gharkhata" aria-label="Project: GharKhata">
+        <div class="project-inner">
+          <div class="project-left">
+            <p class="t-eyebrow reveal-up">Project 02 — Fintech PWA · Offline-First</p>
+            <h2 class="project-name reveal-up">GharKhata</h2>
+            <p class="project-desc reveal-up">A shared expense app for couples — works fully offline, syncs when you're back. Built in 2 days.</p>
+            <div class="project-metrics reveal-up">
+              <span class="metric-chip">2 days idea → live</span>
+              <span class="metric-chip">Offline-first sync engine</span>
+              <span class="metric-chip">13 unit tests</span>
+              <span class="metric-chip live-badge"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
+            </div>
+            <div class="tech-pills reveal-up">
+              <span class="tech-pill">React 18</span>
+              <span class="tech-pill">TypeScript</span>
+              <span class="tech-pill">Vite</span>
+              <span class="tech-pill">Dexie/IndexedDB</span>
+              <span class="tech-pill">Supabase</span>
+              <span class="tech-pill">Recharts</span>
+            </div>
+            <a class="project-link reveal-up" href="https://gharkhata.vercel.app" target="_blank" rel="noopener" aria-label="View GharKhata live">
+              View live →
+            </a>
+          </div>
+          <div class="project-right" aria-hidden="true">
+            <div class="project-device-wrap" style="max-width:220px; margin:0 auto;">
+              <div class="device-phone" style="position:relative;right:auto;bottom:auto;width:100%;animation:hero-bob 6s ease-in-out infinite;">
+                <div class="phone-screen">
+                  <div class="screen-content" data-project="gharkhata">
+                    <div class="video-placeholder">
+                      <span class="vp-name">GharKhata</span>
+                      <span>· video coming soon</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Project 03: PitchReady -->
+      <section class="section-project" data-project="pitchready" id="project-pitchready" aria-label="Project: PitchReady">
+        <div class="project-inner">
+          <div class="project-left">
+            <p class="t-eyebrow reveal-up">Project 03 — Sports Tech · SSR</p>
+            <h2 class="project-name reveal-up">PitchReady</h2>
+            <p class="project-desc reveal-up">A cricket performance tracker — training, matches, fitness and mindset in one place. Scaffolded to deployed in 1 day.</p>
+            <div class="project-metrics reveal-up">
+              <span class="metric-chip">1 day to ship</span>
+              <span class="metric-chip">6 tracked domains</span>
+              <span class="metric-chip">Server-side auth</span>
+              <span class="metric-chip live-badge"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
+            </div>
+            <div class="tech-pills reveal-up">
+              <span class="tech-pill">Next.js 16</span>
+              <span class="tech-pill">React 19</span>
+              <span class="tech-pill">Supabase SSR</span>
+              <span class="tech-pill">Tailwind 4</span>
+              <span class="tech-pill">PWA</span>
+            </div>
+            <a class="project-link reveal-up" href="https://pitchready-app.vercel.app" target="_blank" rel="noopener" aria-label="View PitchReady live">
+              View live →
+            </a>
+          </div>
+          <div class="project-right" aria-hidden="true">
+            <div class="project-device-wrap" style="max-width:220px; margin:0 auto;">
+              <div class="device-phone" style="position:relative;right:auto;bottom:auto;width:100%;animation:hero-bob 6s ease-in-out 0.8s infinite;">
+                <div class="phone-screen">
+                  <div class="screen-content" data-project="pitchready">
+                    <div class="video-placeholder">
+                      <span class="vp-name">PitchReady</span>
+                      <span>· video coming soon</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Project 04: Postroom Studio -->
+      <section class="section-project" data-project="postroom" id="project-postroom" aria-label="Project: Postroom Studio">
+        <div class="project-inner">
+          <div class="project-left">
+            <p class="t-eyebrow reveal-up">Project 04 — Brand &amp; Web Design</p>
+            <h2 class="project-name reveal-up">Postroom Studio</h2>
+            <p class="project-desc reveal-up">Full brand identity and marketing site for a video-editing studio — designed, written, and shipped solo. Twice.</p>
+            <div class="project-metrics reveal-up">
+              <span class="metric-chip">2 complete design iterations</span>
+              <span class="metric-chip">Zero dependencies</span>
+              <span class="metric-chip">Custom cursor + motion system</span>
+              <span class="metric-chip live-badge"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
+            </div>
+            <div class="tech-pills reveal-up">
+              <span class="tech-pill">Single-file HTML/CSS/JS</span>
+              <span class="tech-pill">Custom rAF cursor</span>
+              <span class="tech-pill">IntersectionObserver reveals</span>
+              <span class="tech-pill">Design tokens</span>
+            </div>
+            <a class="project-link reveal-up" id="postroom-link" href="#" target="_blank" rel="noopener" aria-label="View Postroom Studio live">
+              View live →
+            </a>
+          </div>
+          <div class="project-right" aria-hidden="true">
+            <div class="project-device-wrap">
+              <div class="device-laptop">
+                <div class="laptop-lid screen-slide-outer">
+                  <div class="screen-content" data-project="postroom">
+                    <div class="video-placeholder">
+                      <span class="vp-name">Postroom Studio</span>
+                      <span>· video coming soon</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="laptop-bezel"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /projects-container -->
+
+    <!-- ====================================================
+         SERVICES
+         ==================================================== -->
+    <section class="section-services" id="services" aria-label="Services offered">
+      <div class="content-wrap">
+
+        <div class="services-header">
+          <p class="t-eyebrow services-eyebrow reveal-up">Web · iOS · Android · Mac · Windows</p>
+          <h2 class="t-section reveal-up" style="margin-top:12px;">One idea. Every screen.</h2>
+        </div>
+
+        <!-- Constellation (desktop 3D, injected by scene.js) -->
+        <div class="constellation-area" id="constellation-area" aria-hidden="true"></div>
+
+        <!-- Mobile fallback: CSS device cards -->
+        <div class="constellation-mobile" id="constellation-mobile" aria-hidden="true">
+          <div class="device-card-mobile">
+            <div style="font-size:2rem;">💻</div>
+            <div class="t-eyebrow">Web / Desktop</div>
+            <div class="tile-demo demo-dashboard">
+              <div class="demo-sidebar"></div>
+              <div class="demo-main">
+                <div class="demo-header"></div>
+                <div class="demo-bars">
+                  <div class="demo-bar" style="height:60%"></div>
+                  <div class="demo-bar" style="height:80%"></div>
+                  <div class="demo-bar" style="height:45%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="device-card-mobile">
+            <div style="font-size:2rem;">📱</div>
+            <div class="t-eyebrow">iOS / Android</div>
+            <div class="tile-demo">
+              <div class="demo-chat">
+                <div class="demo-bubble" style="width:80%;height:12px;"></div>
+                <div class="demo-bubble reply"></div>
+              </div>
+            </div>
+          </div>
+          <div class="device-card-mobile">
+            <div style="font-size:2rem;">🖥️</div>
+            <div class="t-eyebrow">Mac / Windows</div>
+            <div class="tile-demo demo-dashboard">
+              <div class="demo-sidebar"></div>
+              <div class="demo-main">
+                <div class="demo-header"></div>
+                <div class="demo-bars">
+                  <div class="demo-bar" style="height:70%"></div>
+                  <div class="demo-bar" style="height:50%"></div>
+                  <div class="demo-bar" style="height:90%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service tiles 3×2 -->
+        <div class="tiles-grid" id="tiles-grid" aria-label="Service offerings">
+
+          <!-- 1: Web Apps -->
+          <div class="service-tile" data-tile="0" aria-label="Web Apps service">
+            <div class="tile-mini-3d" id="tile-mini-0" aria-hidden="true"></div>
+            <div class="tile-name">Web Apps</div>
+            <div class="tile-desc">Full-stack products that run in any browser.</div>
+            <div class="tile-platforms">
+              <span class="platform-pill">Web</span>
+              <span class="platform-pill">Desktop</span>
+              <span class="platform-pill">Tablet</span>
+            </div>
+            <div class="tile-demo demo-dashboard" id="demo-0">
+              <div class="demo-sidebar"></div>
+              <div class="demo-main">
+                <div class="demo-header"></div>
+                <div class="demo-bars">
+                  <div class="demo-bar" style="height:60%"></div>
+                  <div class="demo-bar" style="height:80%"></div>
+                  <div class="demo-bar" style="height:45%"></div>
+                </div>
+              </div>
+              <div class="demo-notif"></div>
+            </div>
+          </div>
+
+          <!-- 2: Mobile Apps -->
+          <div class="service-tile" data-tile="1" aria-label="Mobile Apps service">
+            <div class="tile-mini-3d" id="tile-mini-1" aria-hidden="true"></div>
+            <div class="tile-name">Mobile Apps</div>
+            <div class="tile-desc">Native iOS and Android. App Store ready. Built with React Native + Expo.</div>
+            <div class="tile-platforms">
+              <span class="platform-pill">iOS</span>
+              <span class="platform-pill">Android</span>
+            </div>
+            <div class="tile-demo" id="demo-1">
+              <div class="demo-chat">
+                <div class="demo-bubble" style="width:75%;"></div>
+                <div class="demo-bubble" style="width:55%;"></div>
+                <div class="demo-bubble reply"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3: Desktop Apps -->
+          <div class="service-tile" data-tile="2" aria-label="Desktop Apps service">
+            <div class="tile-mini-3d" id="tile-mini-2" aria-hidden="true"></div>
+            <div class="tile-name">Desktop Apps</div>
+            <div class="tile-desc">Mac and Windows. Installs like a real application. Electron or Tauri.</div>
+            <div class="tile-platforms">
+              <span class="platform-pill">Mac</span>
+              <span class="platform-pill">Windows</span>
+            </div>
+            <div class="tile-demo demo-dashboard" id="demo-2">
+              <div class="demo-sidebar"></div>
+              <div class="demo-main">
+                <div class="demo-header"></div>
+                <div class="demo-bars">
+                  <div class="demo-bar" style="height:55%"></div>
+                  <div class="demo-bar" style="height:75%"></div>
+                  <div class="demo-bar" style="height:40%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4: AI-Powered Products -->
+          <div class="service-tile" data-tile="3" aria-label="AI-Powered Products service">
+            <div class="tile-mini-3d" id="tile-mini-3" aria-hidden="true"></div>
+            <div class="tile-name">AI-Powered Products</div>
+            <div class="tile-desc">Tools that think. Claude API, OpenAI, custom AI workflows built in.</div>
+            <div class="tile-platforms">
+              <span class="platform-pill">Web</span>
+              <span class="platform-pill">iOS</span>
+              <span class="platform-pill">Android</span>
+            </div>
+            <div class="tile-demo" id="demo-3">
+              <div class="demo-chat">
+                <div class="demo-bubble" style="width:80%;"></div>
+                <div class="demo-bubble reply"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5: Full SaaS Products -->
+          <div class="service-tile" data-tile="4" aria-label="Full SaaS Products service">
+            <div class="tile-mini-3d" id="tile-mini-4" aria-hidden="true"></div>
+            <div class="tile-name">Full SaaS Products</div>
+            <div class="tile-desc">Auth, payments, dashboards, user management. The complete product.</div>
+            <div class="tile-platforms">
+              <span class="platform-pill">Web</span>
+              <span class="platform-pill">Mobile</span>
+            </div>
+            <div class="tile-demo" id="demo-4">
+              <div class="demo-layers">
+                <div class="demo-layer" style="top:15px;transform:none;"></div>
+                <div class="demo-layer" style="top:calc(50% - 7px);transform:none;left:15%;width:70%;"></div>
+                <div class="demo-layer" style="bottom:15px;top:auto;transform:none;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6: Landing Pages + Motion -->
+          <div class="service-tile" data-tile="5" aria-label="Landing Pages and Motion service">
+            <div class="tile-mini-3d" id="tile-mini-5" aria-hidden="true"></div>
+            <div class="tile-name">Landing Pages + Motion</div>
+            <div class="tile-desc">Scroll animations, 3D, conversion-focused. The kind of site people screenshot.</div>
+            <div class="tile-platforms">
+              <span class="platform-pill">Web</span>
+            </div>
+            <div class="tile-demo" id="demo-5">
+              <div class="demo-page">
+                <div class="demo-page-hero"></div>
+                <div class="demo-page-text">
+                  <div class="demo-page-line"></div>
+                  <div class="demo-page-line"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /tiles-grid -->
+
+        <p class="tiles-nudge">
+          Don't see exactly what you need? <a href="#idea-form">→ <span class="arrow">Describe it anyway.</span></a>
+        </p>
+
+      </div>
+    </section>
+
+    <!-- ====================================================
+         7-DAY PROCESS
+         ==================================================== -->
+    <section class="section-process" id="process" aria-label="7-day build process">
+      <div class="content-wrap">
+        <div class="process-header">
+          <p class="t-eyebrow reveal-up">How it works</p>
+          <h2 class="t-section reveal-up" style="margin-top:12px;">7 days. Start to shipped.</h2>
+        </div>
+
+        <!-- Desktop timeline -->
+        <div class="timeline-desktop" id="timeline-desktop">
+          <div class="timeline-days">
+            <div class="timeline-day">
+              <div class="day-number">01</div>
+              <div class="day-items">
+                <span class="day-item">Scope locked</span>
+                <span class="day-item">Repo + infra setup</span>
+                <span class="day-item">Database schema</span>
+              </div>
+            </div>
+            <div class="timeline-day">
+              <div class="day-number">02</div>
+              <div class="day-items">
+                <span class="day-item">Auth + core data layer</span>
+                <span class="day-item">First deploy (yes, day 2)</span>
+              </div>
+            </div>
+            <div class="timeline-day">
+              <div class="day-number">03</div>
+              <div class="day-items">
+                <span class="day-item">Core feature build</span>
+              </div>
+            </div>
+            <div class="timeline-day">
+              <div class="day-number">04</div>
+              <div class="day-items">
+                <span class="day-item">Core feature complete</span>
+                <span class="day-item">Internal testing</span>
+              </div>
+            </div>
+            <div class="timeline-day">
+              <div class="day-number">05</div>
+              <div class="day-items">
+                <span class="day-item">Second feature + edge cases</span>
+              </div>
+            </div>
+            <div class="timeline-day">
+              <div class="day-number">06</div>
+              <div class="day-items">
+                <span class="day-item">Design polish</span>
+                <span class="day-item">Mobile pass</span>
+                <span class="day-item">Speed pass</span>
+              </div>
+            </div>
+            <div class="timeline-day">
+              <div class="day-number">07</div>
+              <div class="day-items">
+                <span class="day-item">Final review with you</span>
+                <span class="day-item" style="color:var(--live);font-weight:600;">DEPLOYED</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-rail">
+            <div class="timeline-line-bg"></div>
+            <div class="timeline-line-fill" id="timeline-line-fill"></div>
+            <div class="timeline-dots">
+              <span class="timeline-dot" id="tdot-0"></span>
+              <span class="timeline-dot" id="tdot-1"></span>
+              <span class="timeline-dot" id="tdot-2"></span>
+              <span class="timeline-dot" id="tdot-3"></span>
+              <span class="timeline-dot" id="tdot-4"></span>
+              <span class="timeline-dot" id="tdot-5"></span>
+              <span class="timeline-dot" id="tdot-6"></span>
+            </div>
+            <div class="timeline-deployed" id="timeline-deployed">
+              <span class="live-dot"></span>
+              <span class="t-eyebrow" style="color:var(--live);">DEPLOYED ●</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile timeline -->
+        <div class="timeline-mobile" id="timeline-mobile">
+          <div class="timeline-mobile-rail">
+            <div class="timeline-mobile-fill" id="timeline-mobile-fill"></div>
+          </div>
+          <div class="timeline-day-mobile">
+            <div class="day-number" style="font-size:1.4rem;">01</div>
+            <div class="day-items">
+              <span class="day-item">Scope locked · Repo + infra setup · Database schema</span>
+            </div>
+          </div>
+          <div class="timeline-day-mobile">
+            <div class="day-number" style="font-size:1.4rem;">02</div>
+            <div class="day-items">
+              <span class="day-item">Auth + core data layer · First deploy (yes, day 2)</span>
+            </div>
+          </div>
+          <div class="timeline-day-mobile">
+            <div class="day-number" style="font-size:1.4rem;">03</div>
+            <div class="day-items"><span class="day-item">Core feature build</span></div>
+          </div>
+          <div class="timeline-day-mobile">
+            <div class="day-number" style="font-size:1.4rem;">04</div>
+            <div class="day-items">
+              <span class="day-item">Core feature complete · Internal testing</span>
+            </div>
+          </div>
+          <div class="timeline-day-mobile">
+            <div class="day-number" style="font-size:1.4rem;">05</div>
+            <div class="day-items">
+              <span class="day-item">Second feature + edge cases</span>
+            </div>
+          </div>
+          <div class="timeline-day-mobile">
+            <div class="day-number" style="font-size:1.4rem;">06</div>
+            <div class="day-items">
+              <span class="day-item">Design polish · Mobile pass · Speed pass</span>
+            </div>
+          </div>
+          <div class="timeline-day-mobile">
+            <div class="day-number" style="font-size:1.4rem;color:var(--live);">07</div>
+            <div class="day-items">
+              <span class="day-item">Final review with you · <strong style="color:var(--live);">DEPLOYED ●</strong></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====================================================
+         TECH GRAPH
+         ==================================================== -->
+    <section class="section-tech" id="tech" aria-label="Technology stack">
+      <div class="content-wrap">
+        <p class="t-eyebrow reveal-up">The stack</p>
+        <h2 class="t-section reveal-up" style="margin-top:12px; margin-bottom:40px;">Technologies I ship with.</h2>
+
+        <!-- Desktop: Three.js force graph -->
+        <div class="tech-graph-area" id="tech-graph-area" aria-hidden="true"></div>
+
+        <!-- Mobile: CSS grid -->
+        <div class="tech-grid-mobile" id="tech-grid-mobile" role="list" aria-label="Technology list">
+          <div class="tech-cell" role="listitem">Supabase</div>
+          <div class="tech-cell" role="listitem">React</div>
+          <div class="tech-cell" role="listitem">TypeScript</div>
+          <div class="tech-cell" role="listitem">Next.js</div>
+          <div class="tech-cell" role="listitem">Vite</div>
+          <div class="tech-cell" role="listitem">Tailwind</div>
+          <div class="tech-cell" role="listitem">Vanilla JS</div>
+          <div class="tech-cell" role="listitem">Node/Serverless</div>
+          <div class="tech-cell" role="listitem">PWA</div>
+          <div class="tech-cell" role="listitem">Web Push</div>
+          <div class="tech-cell" role="listitem">IndexedDB</div>
+          <div class="tech-cell" role="listitem">GSAP</div>
+          <div class="tech-cell" role="listitem">Three.js</div>
+          <div class="tech-cell" role="listitem">Vercel</div>
+          <div class="tech-cell" role="listitem">Recharts</div>
+          <div class="tech-cell" role="listitem">KaTeX</div>
+          <div class="tech-cell" role="listitem">Playwright</div>
+          <div class="tech-cell" role="listitem">Expo</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         IDEA FORM
+         ==================================================== -->
+    <section class="section-form" id="idea-form" aria-label="Describe your idea">
+      <div class="form-wrap">
+        <h2 class="form-headline reveal-up">
+          Describe your idea.<br>
+          I'll tell you what's buildable.
+        </h2>
+        <p class="form-subline reveal-up">
+          Personally reviewed — no AI, no template. A real answer, usually within a few hours.
+        </p>
+
+        <div id="form-container">
+          <form id="idea-form-el" novalidate>
+            <div class="form-field">
+              <label for="field-idea">The Idea</label>
+              <textarea id="field-idea" name="idea" placeholder="A booking tool for my coaching business…" rows="3" required></textarea>
+              <div class="form-error" id="idea-error">Please describe your idea before sending.</div>
+            </div>
+            <div class="form-field">
+              <label for="field-who">Who It's For</label>
+              <input type="text" id="field-who" name="who" placeholder="Fitness coaches with 1:1 clients" />
+            </div>
+            <div class="form-field">
+              <label for="field-name">Your Name</label>
+              <input type="text" id="field-name" name="name" placeholder="So I know who I'm replying to" />
+            </div>
+            <button type="submit" class="btn-submit">Get my free MVP plan →</button>
+          </form>
+
+          <div class="form-success" id="form-success" aria-live="polite">
+            <div class="success-check" aria-hidden="true">✓</div>
+            <div class="success-title">Opening WhatsApp…</div>
+            <p class="success-sub">I'll review your idea and send you a custom build plan — usually within 2–3 hours.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         FINAL CTA
+         ==================================================== -->
+    <section class="section-final-cta" id="final-cta" aria-label="Final call to action">
+      <h2 class="final-headline reveal-up">
+        Your idea deserves<br>to exist.
+      </h2>
+      <div class="final-cta-actions">
+        <a class="btn-final-wa"
+           href="https://wa.me/917080442040?text=Hi%20Sahil%2C%20I%20saw%20your%20portfolio%20and%20want%20to%20discuss%20a%20project."
+           target="_blank" rel="noopener">
+          Start your build →
+        </a>
+        <a class="final-email-link" href="mailto:sahilsolankey1009@gmail.com">
+          or sahilsolankey1009@gmail.com
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====================================================
+       FOOTER
+       ==================================================== -->
+  <footer class="site-footer" aria-label="Site footer">
+    <div class="footer-inner">
+      <span class="footer-copy">© 2026 Sahil Solankey</span>
+      <div class="footer-links">
+        <a href="https://www.linkedin.com/in/sahil-solankey-3aa7b2188" target="_blank" rel="noopener" aria-label="LinkedIn profile">LinkedIn</a>
+        <a href="https://github.com/PoisonOps" target="_blank" rel="noopener" aria-label="GitHub profile">GitHub</a>
+      </div>
+      <span class="footer-wink">Built by me, obviously.</span>
+    </div>
+  </footer>
+
+  <!-- CDN Libraries (pinned versions, in load order) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+
+  <!-- App scripts (load order matters) -->
+  <script src="js/scene.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/form.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+</html>
