@@ -1093,15 +1093,219 @@ function initTileCanvases() {
    PROJECT SCREEN PREVIEWS  (live canvas instead of "coming soon")
    ═══════════════════════════════════════════════════════════════════ */
 function drawCATalystScreen(ctx, W, H, t) {
-  /* Fix Mode — red-tinted practice interface */
-  ctx.fillStyle = '#070911';
+  /* ── CATalyst Fix Mode ── real question UI, red theme ── */
+  ctx.fillStyle = '#07080f';
   ctx.fillRect(0, 0, W, H);
 
-  /* Top status bar */
-  const barH = H * 0.09;
+  const fs = H / 220; /* scale factor */
+  const px = W * 0.045;
+
+  /* Phase cycle: 0-4s question → 4-7s wrong answer revealed → 7-11s insight */
+  const cycle = (t * 0.4) % (11 * 24); /* 24 frames/s equiv */
+  const phase = cycle / 24;
+
+  /* ── Header bar ── */
   const fixGrad = ctx.createLinearGradient(0, 0, W, 0);
-  fixGrad.addColorStop(0, 'rgba(220,38,38,0.22)');
-  fixGrad.addColorStop(1, 'rgba(180,30,30,0.08)');
+  fixGrad.addColorStop(0, 'rgba(220,38,38,0.25)');
+  fixGrad.addColorStop(1, 'rgba(180,30,30,0.06)');
+  ctx.fillStyle = fixGrad;
+  ctx.fillRect(0, 0, W, H * 0.11);
+
+  ctx.fillStyle = 'rgba(248,113,113,0.95)';
+  ctx.font = `bold ${fs * 11}px Inter, sans-serif`;
+  ctx.fillText('FIX MODE', px, H * 0.073);
+
+  /* Session progress dots */
+  for (let i = 0; i < 5; i++) {
+    const done = i < 3;
+    ctx.fillStyle = done ? 'rgba(248,113,113,0.9)' : 'rgba(255,255,255,0.12)';
+    ctx.beginPath();
+    ctx.arc(W - px - (4 - i) * fs * 14, H * 0.057, fs * 4.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText('3/5 fixed', W - px - 5 * fs * 14 - 6, H * 0.062);
+  ctx.textAlign = 'left';
+
+  /* ── Subject / type tag ── */
+  ctx.fillStyle = 'rgba(59,130,246,0.18)';
+  ctx.beginPath();
+  ctx.roundRect(px, H * 0.135, fs * 50, fs * 16, 4);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(147,197,253,0.85)';
+  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
+  ctx.fillText('Quant · Permutations', px + fs * 5, H * 0.148);
+
+  ctx.fillStyle = 'rgba(232,130,12,0.18)';
+  ctx.beginPath();
+  ctx.roundRect(px + fs * 56, H * 0.135, fs * 55, fs * 16, 4);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(232,130,12,0.85)';
+  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
+  ctx.fillText('Error type: Concept Gap', px + fs * 61, H * 0.148);
+
+  /* ── Question card ── */
+  const cardY = H * 0.175, cardH = H * 0.345;
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.strokeStyle = phase >= 4 ? 'rgba(248,113,113,0.25)' : 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.roundRect(px, cardY, W - px * 2, cardH, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  /* Question number */
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+  ctx.fillText('Q.07', px + fs * 7, cardY + fs * 14);
+
+  /* Question text — using actual readable copy */
+  ctx.fillStyle = 'rgba(233,229,220,0.82)';
+  ctx.font = `${fs * 10.5}px Inter, sans-serif`;
+  const qLines = [
+    'In how many ways can 3 boys and 3 girls',
+    'be seated in a row so that no two girls',
+    'sit adjacent to each other?',
+  ];
+  qLines.forEach((l, i) => ctx.fillText(l, px + fs * 7, cardY + fs * 28 + i * fs * 14));
+
+  /* ── Options ── */
+  const opts = [
+    { lbl: 'A', txt: '36',   },
+    { lbl: 'B', txt: '72',   correct: true },
+    { lbl: 'C', txt: '144',  wrong: true },
+    { lbl: 'D', txt: '120',  },
+  ];
+  opts.forEach((o, i) => {
+    const oy = cardY + H * 0.14 + i * H * 0.048;
+    const selected = o.wrong && phase >= 3;
+    const revealed = phase >= 4;
+
+    let bg = 'rgba(255,255,255,0.025)';
+    let border = 'rgba(255,255,255,0.06)';
+    let textColor = 'rgba(233,229,220,0.55)';
+
+    if (selected)                     { bg = 'rgba(220,38,38,0.15)'; border = 'rgba(248,113,113,0.45)'; textColor = 'rgba(248,113,113,0.9)'; }
+    if (revealed && o.correct)        { bg = 'rgba(34,197,94,0.1)';  border = 'rgba(74,222,128,0.45)';  textColor = 'rgba(74,222,128,0.9)'; }
+
+    ctx.fillStyle = bg;
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.roundRect(px, oy, W - px * 2, H * 0.039, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    /* Label circle */
+    ctx.fillStyle = selected ? 'rgba(248,113,113,0.85)' : (revealed && o.correct ? 'rgba(74,222,128,0.85)' : 'rgba(255,255,255,0.12)');
+    ctx.beginPath();
+    ctx.arc(px + fs * 12, oy + H * 0.0195, fs * 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = selected || (revealed && o.correct) ? '#060810' : 'rgba(255,255,255,0.4)';
+    ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(o.lbl, px + fs * 12, oy + H * 0.0245);
+    ctx.textAlign = 'left';
+
+    /* Answer text */
+    ctx.fillStyle = textColor;
+    ctx.font = `${fs * 10.5}px Inter, sans-serif`;
+    ctx.fillText(o.txt, px + fs * 24, oy + H * 0.026);
+
+    /* ✗ or ✓ reveal */
+    if (revealed && (o.correct || o.wrong)) {
+      ctx.fillStyle = o.correct ? 'rgba(74,222,128,0.85)' : 'rgba(248,113,113,0.85)';
+      ctx.font = `bold ${fs * 11}px sans-serif`;
+      ctx.textAlign = 'right';
+      ctx.fillText(o.correct ? '✓' : '✗', W - px - fs * 4, oy + H * 0.026);
+      ctx.textAlign = 'left';
+    }
+  });
+
+  /* ── Mark cost + action bar ── */
+  const abY = cardY + cardH + H * 0.018;
+  const pulse = 0.8 + 0.2 * Math.sin(t * 0.08);
+  ctx.fillStyle = `rgba(220,38,38,${pulse * 0.88})`;
+  ctx.beginPath();
+  ctx.roundRect(px, abY, W * 0.48 - px, H * 0.065, 20);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${fs * 10}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('−1 mark · Fix this now', px + (W * 0.48 - px) / 2, abY + H * 0.042);
+  ctx.textAlign = 'left';
+
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.beginPath();
+  ctx.roundRect(W * 0.5, abY, W * 0.5 - px, H * 0.065, 20);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.roundRect(W * 0.5, abY, W * 0.5 - px, H * 0.065, 20);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = `${fs * 10}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Next →', W * 0.5 + (W * 0.5 - px) / 2, abY + H * 0.042);
+  ctx.textAlign = 'left';
+
+  /* ── Insight strip ── */
+  const insight = phase >= 7;
+  const insightAlpha = Math.min(1, (phase - 7) / 1.2);
+  if (insight) {
+    const iy = abY + H * 0.082;
+    ctx.globalAlpha = insightAlpha;
+    ctx.fillStyle = 'rgba(255,255,255,0.02)';
+    ctx.fillRect(0, iy, W, H - iy);
+
+    ctx.fillStyle = 'rgba(248,113,113,0.7)';
+    ctx.font = `bold ${fs * 9.5}px JetBrains Mono, monospace`;
+    ctx.fillText('You\'ve made this error 3 times.', px, iy + H * 0.038);
+
+    /* Mini bar chart */
+    [0.55, 0.8, 0.45, 0.7, 0.9, 0.6, 0.75].forEach((bh, i) => {
+      const bx = px + i * (W - px * 2) / 7;
+      const bH = H * 0.06 * bh;
+      const by = H * 0.97 - bH;
+      ctx.fillStyle = `rgba(248,113,113,${0.3 + 0.4 * bh})`;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, (W - px * 2) / 7 - 3, bH, [2, 2, 0, 0]);
+      ctx.fill();
+    });
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'right';
+    ctx.fillText('Last 7 days', W - px, iy + H * 0.038);
+    ctx.textAlign = 'left';
+    ctx.globalAlpha = 1;
+  }
+
+  /* Timer */
+  const timeLeft = Math.max(0, 90 - Math.floor(t * 0.013) % 90);
+  const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+  const ss = String(timeLeft % 60).padStart(2, '0');
+  ctx.fillStyle = timeLeft < 20 ? 'rgba(248,113,113,0.7)' : 'rgba(255,255,255,0.18)';
+  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText(`${mm}:${ss}`, W - px, H * 0.073);
+  ctx.textAlign = 'left';
+
+  /* Status bar time */
+  ctx.fillStyle = 'rgba(255,255,255,0.0)'; /* invisible bg already black */
+  const barH = H * 0.11;
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(0, 0, W, H * 0.0);
+
+  /* Fix mode phase label */
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText('Phase 1 / 2', W - px - fs * 60, H * 0.073);
+  ctx.textAlign = 'left';
+}
   ctx.fillStyle = fixGrad;
   ctx.fillRect(0, 0, W, barH);
 
@@ -1228,224 +1432,655 @@ function drawCATalystScreen(ctx, W, H, t) {
 }
 
 function drawGharKhataScreen(ctx, W, H, t) {
-  /* GharKhata — household expense tracker (phone-proportioned) */
-  ctx.fillStyle = '#070d0a';
+  /* ── GharKhata — shared expense tracker, phone UI ── */
+  ctx.fillStyle = '#06100a';
   ctx.fillRect(0, 0, W, H);
 
-  /* Header */
-  const headerGrad = ctx.createLinearGradient(0, 0, 0, H * 0.18);
-  headerGrad.addColorStop(0, 'rgba(0,200,83,0.22)');
-  headerGrad.addColorStop(1, 'rgba(0,200,83,0.04)');
-  ctx.fillStyle = headerGrad;
-  ctx.fillRect(0, 0, W, H * 0.18);
+  const fs = H / 380; /* scale factor for phone-proportioned canvas */
+  const px = W * 0.055;
 
   /* Status bar */
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.font = `${H * 0.032}px JetBrains Mono, monospace`;
-  ctx.fillText('9:41', W * 0.08, H * 0.048);
-
-  /* App name */
-  ctx.fillStyle = 'rgba(0,200,83,0.95)';
-  ctx.font = `bold ${H * 0.058}px Inter, sans-serif`;
-  ctx.fillText('GharKhata', W * 0.07, H * 0.145);
-
-  /* Balance card */
-  const cg = ctx.createLinearGradient(0, H * 0.21, 0, H * 0.41);
-  cg.addColorStop(0, 'rgba(0,200,83,0.28)');
-  cg.addColorStop(1, 'rgba(0,200,83,0.06)');
-  ctx.fillStyle = cg;
-  ctx.beginPath();
-  ctx.roundRect(W * 0.05, H * 0.21, W * 0.9, H * 0.2, 10);
-  ctx.fill();
-
-  ctx.fillStyle = 'rgba(255,255,255,0.32)';
-  ctx.font = `${H * 0.032}px JetBrains Mono, monospace`;
-  ctx.fillText('Balance', W * 0.1, H * 0.265);
-
-  /* Animated balance */
-  const balNum = Math.floor(12450 + 50 * Math.sin(t * 0.02));
-  ctx.fillStyle = 'rgba(255,255,255,0.92)';
-  ctx.font = `bold ${H * 0.072}px JetBrains Mono, monospace`;
-  ctx.fillText(`₹${balNum.toLocaleString('en-IN')}`, W * 0.1, H * 0.36);
-
-  /* This month chip */
-  const mth = 0.7 + 0.15 * Math.sin(t * 0.015 + 1);
-  ctx.fillStyle = `rgba(0,200,83,${mth * 0.6})`;
-  ctx.beginPath();
-  ctx.roundRect(W * 0.6, H * 0.245, W * 0.32, H * 0.065, 12);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(5,46,22,0.9)';
-  ctx.font = `bold ${H * 0.03}px Inter, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText('↓ ₹2,140', W * 0.76, H * 0.285);
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
+  ctx.fillText('9:41', px, H * 0.04);
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(0,200,83,0.5)';
+  ctx.fillText('● online', W - px, H * 0.04);
   ctx.textAlign = 'left';
 
-  /* Expense rows */
-  const expenses = [
-    { label: 'Groceries', amt: '₹840', icon: '🛒', color: 'rgba(232,130,12,0.8)' },
-    { label: 'Dinner',    amt: '₹560', icon: '🍽', color: 'rgba(46,91,255,0.8)' },
-    { label: 'Travel',    amt: '₹320', icon: '🚗', color: 'rgba(139,92,246,0.8)' },
-    { label: 'Coffee',    amt: '₹180', icon: '☕', color: 'rgba(220,38,38,0.7)' },
-  ];
+  /* Header gradient */
+  const hg = ctx.createLinearGradient(0, 0, 0, H * 0.19);
+  hg.addColorStop(0, 'rgba(0,200,83,0.2)');
+  hg.addColorStop(1, 'transparent');
+  ctx.fillStyle = hg;
+  ctx.fillRect(0, 0, W, H * 0.19);
 
-  const highlight = Math.floor(((t * 0.01) % expenses.length));
-  expenses.forEach((e, i) => {
-    const ry = H * (0.44 + i * 0.126);
-    const isHi = i === highlight;
-    ctx.fillStyle = isHi ? 'rgba(0,200,83,0.07)' : 'rgba(255,255,255,0.03)';
+  /* App name + avatar pair row */
+  ctx.fillStyle = 'rgba(0,200,83,0.95)';
+  ctx.font = `bold ${fs * 16}px Inter, sans-serif`;
+  ctx.fillText('GharKhata', px, H * 0.115);
+
+  /* Avatar pair — Sahil + Priya */
+  ['#e8820c', '#2E5BFF'].forEach((c, i) => {
+    ctx.fillStyle = c;
     ctx.beginPath();
-    ctx.roundRect(W * 0.05, ry, W * 0.9, H * 0.1, 6);
+    ctx.arc(W - px - (1 - i) * fs * 20, H * 0.09, fs * 10, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.fillStyle = e.color;
-    ctx.beginPath();
-    ctx.arc(W * 0.12, ry + H * 0.05, H * 0.025, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = 'rgba(255,255,255,0.72)';
-    ctx.font = `${H * 0.036}px Inter, sans-serif`;
-    ctx.fillText(e.label, W * 0.19, ry + H * 0.058);
-
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.font = `${H * 0.034}px JetBrains Mono, monospace`;
-    ctx.textAlign = 'right';
-    ctx.fillText(e.amt, W * 0.92, ry + H * 0.058);
-    ctx.textAlign = 'left';
   });
 
-  /* Bottom tab bar */
-  ctx.fillStyle = '#0a0f0c';
-  ctx.fillRect(0, H * 0.9, W, H * 0.1);
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-  ctx.lineWidth = 0.5;
+  /* Month label */
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+  ctx.fillText('June 2026', px, H * 0.155);
+
+  /* ── Balance card ── */
+  const cardY = H * 0.19;
+  const cg = ctx.createLinearGradient(0, cardY, 0, cardY + H * 0.21);
+  cg.addColorStop(0, 'rgba(0,200,83,0.2)');
+  cg.addColorStop(1, 'rgba(0,200,83,0.04)');
+  ctx.fillStyle = cg;
+  ctx.strokeStyle = 'rgba(0,200,83,0.18)';
+  ctx.lineWidth = 0.8;
   ctx.beginPath();
-  ctx.moveTo(0, H * 0.9);
-  ctx.lineTo(W, H * 0.9);
+  ctx.roundRect(px, cardY, W - px * 2, H * 0.21, 10);
+  ctx.fill();
   ctx.stroke();
 
-  ['⊞', '↗', '⊕', '◷'].forEach((icon, i) => {
-    ctx.fillStyle = i === 0 ? 'rgba(0,200,83,0.9)' : 'rgba(255,255,255,0.2)';
-    ctx.font = `${H * 0.044}px sans-serif`;
+  /* Balance label + number */
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${fs * 9.5}px JetBrains Mono, monospace`;
+  ctx.fillText('Net Balance', px + fs * 8, cardY + H * 0.046);
+
+  const balAnim = Math.floor(12450 + 18 * Math.sin(t * 0.018));
+  ctx.fillStyle = 'rgba(255,255,255,0.93)';
+  ctx.font = `bold ${fs * 20}px Inter, sans-serif`;
+  ctx.fillText(`₹${balAnim.toLocaleString('en-IN')}`, px + fs * 8, cardY + H * 0.125);
+
+  /* Income / Expense chips */
+  [
+    { label: '↑ Income', val: '₹18,000', color: 'rgba(0,200,83,0.8)', x: 0 },
+    { label: '↓ Spent',  val: '₹5,550',  color: 'rgba(248,113,113,0.75)', x: 0.5 },
+  ].forEach(chip => {
+    const cx = px + fs * 8 + (W - px * 2 - fs * 16) * chip.x;
+    ctx.fillStyle = chip.color;
+    ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+    ctx.fillText(chip.label, cx, cardY + H * 0.166);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = `bold ${fs * 10.5}px JetBrains Mono, monospace`;
+    ctx.fillText(chip.val, cx, cardY + H * 0.193);
+  });
+
+  /* ── Budget progress bar ── */
+  const progY = cardY + H * 0.225;
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.beginPath();
+  ctx.roundRect(px, progY, W - px * 2, H * 0.032, 8);
+  ctx.fill();
+
+  const spent = 5550, budget = 12000;
+  const prog = spent / budget;
+  const barGrad = ctx.createLinearGradient(px, 0, px + (W - px * 2) * prog, 0);
+  barGrad.addColorStop(0, 'rgba(0,200,83,0.85)');
+  barGrad.addColorStop(1, 'rgba(232,130,12,0.7)');
+  ctx.fillStyle = barGrad;
+  ctx.beginPath();
+  ctx.roundRect(px, progY, (W - px * 2) * prog, H * 0.032, 8);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+  ctx.fillText(`Budget: ₹${spent.toLocaleString('en-IN')} / ₹${budget.toLocaleString('en-IN')}`, px, progY + H * 0.052);
+
+  /* ── Recent transactions ── */
+  const txY = progY + H * 0.07;
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
+  ctx.fillText('RECENT', px, txY);
+
+  /* Animated "new sync" indicator */
+  const syncPulse = 0.5 + 0.5 * Math.abs(Math.sin(t * 0.06));
+  ctx.fillStyle = `rgba(0,200,83,${syncPulse * 0.8})`;
+  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText('⟳ synced just now', W - px, txY);
+  ctx.textAlign = 'left';
+
+  const tx = [
+    { who: 'Sahil',  name: 'Zomato Dinner',    amt: '-₹560',  c: '#e8820c', sign: -1 },
+    { who: 'Priya',  name: 'Grocery store',     amt: '-₹840',  c: '#2E5BFF', sign: -1 },
+    { who: 'Sahil',  name: 'Petrol',            amt: '-₹320',  c: '#e8820c', sign: -1 },
+    { who: 'Priya',  name: 'Coffee & snacks',   amt: '-₹180',  c: '#2E5BFF', sign: -1 },
+  ];
+
+  const newRow = Math.floor((t * 0.005) % tx.length);
+  tx.forEach((e, i) => {
+    const ry = txY + H * 0.052 + i * H * 0.107;
+    const isNew = i === newRow;
+    const rowAlpha = isNew ? 1 : 0.8;
+
+    ctx.globalAlpha = rowAlpha;
+    ctx.fillStyle = isNew ? 'rgba(0,200,83,0.06)' : 'rgba(255,255,255,0.028)';
+    ctx.beginPath();
+    ctx.roundRect(px, ry, W - px * 2, H * 0.092, 6);
+    ctx.fill();
+
+    /* Avatar initial */
+    ctx.fillStyle = e.c;
+    ctx.beginPath();
+    ctx.arc(px + fs * 13, ry + H * 0.046, fs * 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${fs * 10}px Inter, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(icon, W * (0.15 + i * 0.23), H * 0.955);
+    ctx.fillText(e.who[0], px + fs * 13, ry + H * 0.051);
+    ctx.textAlign = 'left';
+
+    /* Name and who paid */
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
+    ctx.font = `${fs * 10.5}px Inter, sans-serif`;
+    ctx.fillText(e.name, px + fs * 30, ry + H * 0.038);
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.font = `${fs * 8.5}px Inter, sans-serif`;
+    ctx.fillText(`Paid by ${e.who}`, px + fs * 30, ry + H * 0.066);
+
+    /* Amount */
+    ctx.fillStyle = 'rgba(248,113,113,0.75)';
+    ctx.font = `bold ${fs * 10.5}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'right';
+    ctx.fillText(e.amt, W - px, ry + H * 0.05);
+    ctx.textAlign = 'left';
+
+    if (isNew) {
+      ctx.fillStyle = 'rgba(0,200,83,0.7)';
+      ctx.font = `${fs * 7.5}px JetBrains Mono, monospace`;
+      ctx.textAlign = 'right';
+      ctx.fillText('NEW', W - px, ry + H * 0.073);
+      ctx.textAlign = 'left';
+    }
+
+    ctx.globalAlpha = 1;
+  });
+
+  /* ── Tab bar ── */
+  ctx.fillStyle = 'rgba(6,16,10,0.95)';
+  ctx.fillRect(0, H * 0.918, W, H * 0.082);
+  ctx.strokeStyle = 'rgba(0,200,83,0.08)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(0, H * 0.918);
+  ctx.lineTo(W, H * 0.918);
+  ctx.stroke();
+
+  const tabs = [
+    { label: 'Home', active: true  },
+    { label: 'Split', active: false },
+    { label: 'Add',  active: false },
+    { label: 'Stats', active: false },
+  ];
+  tabs.forEach((tab, i) => {
+    const tx2 = W * (0.125 + i * 0.25);
+    if (tab.label === 'Add') {
+      ctx.fillStyle = 'rgba(0,200,83,0.9)';
+      ctx.beginPath();
+      ctx.arc(tx2, H * 0.958, fs * 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${fs * 14}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('+', tx2, H * 0.963);
+    } else {
+      ctx.fillStyle = tab.active ? 'rgba(0,200,83,0.85)' : 'rgba(255,255,255,0.22)';
+      ctx.font = `${fs * 8.5}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(tab.label, tx2, H * 0.963);
+    }
   });
   ctx.textAlign = 'left';
 }
 
 function drawPitchReadyScreen(ctx, W, H, t) {
-  /* PitchReady — AI pitch deck builder (phone-proportioned) */
-  ctx.fillStyle = '#080810';
+  /* ── PitchReady — cricket performance tracker, phone UI ── */
+  ctx.fillStyle = '#060810';
   ctx.fillRect(0, 0, W, H);
 
-  /* Gradient header */
-  const hg = ctx.createLinearGradient(0, 0, W, H * 0.2);
-  hg.addColorStop(0, 'rgba(255,143,0,0.2)');
-  hg.addColorStop(1, 'rgba(255,143,0,0.03)');
-  ctx.fillStyle = hg;
-  ctx.fillRect(0, 0, W, H * 0.2);
+  const fs = H / 380;
+  const px = W * 0.055;
+  const accent = '#FF8F00';
+
+  /* Ambient background glow */
+  const bg = ctx.createRadialGradient(W * 0.5, H * 0.25, 0, W * 0.5, H * 0.25, H * 0.5);
+  bg.addColorStop(0, 'rgba(255,143,0,0.07)');
+  bg.addColorStop(1, 'transparent');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
 
   /* Status bar */
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = `${H * 0.032}px JetBrains Mono, monospace`;
-  ctx.fillText('9:41', W * 0.08, H * 0.05);
-
-  /* App name + AI badge */
-  ctx.fillStyle = 'rgba(255,143,0,0.95)';
-  ctx.font = `bold ${H * 0.055}px Inter, sans-serif`;
-  ctx.fillText('PitchReady', W * 0.07, H * 0.14);
-
-  ctx.fillStyle = 'rgba(255,143,0,0.2)';
-  ctx.beginPath();
-  ctx.roundRect(W * 0.62, H * 0.105, W * 0.3, H * 0.05, 10);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,143,0,0.85)';
-  ctx.font = `bold ${H * 0.03}px JetBrains Mono, monospace`;
-  ctx.textAlign = 'center';
-  ctx.fillText('AI ✦', W * 0.77, H * 0.138);
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+  ctx.fillText('9:41', px, H * 0.038);
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(255,143,0,0.45)';
+  ctx.fillText('PitchReady', W - px, H * 0.038);
   ctx.textAlign = 'left';
 
-  /* Slide thumbnails — 2 col grid */
-  const slides = [
-    { title: 'Problem', active: true },
-    { title: 'Solution', active: false },
-    { title: 'Market', active: false },
-    { title: 'Team', active: false },
-    { title: 'Traction', active: false },
-    { title: 'Ask', active: false },
+  /* Header */
+  ctx.fillStyle = `${accent}`;
+  ctx.font = `bold ${fs * 16}px Inter, sans-serif`;
+  ctx.fillText('Dashboard', px, H * 0.1);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = `${fs * 9}px Inter, sans-serif`;
+  ctx.fillText('Sahil · All formats', px, H * 0.128);
+
+  /* ── Player stats ring ── */
+  const cx = W * 0.72, cy = H * 0.185, r = fs * 32;
+
+  /* Outer ring */
+  ctx.strokeStyle = 'rgba(255,143,0,0.12)';
+  ctx.lineWidth = fs * 6;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  /* Progress arc */
+  const battingAngle = -Math.PI / 2 + (Math.PI * 2) * 0.74;
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = fs * 6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, -Math.PI / 2, battingAngle);
+  ctx.stroke();
+  ctx.lineCap = 'butt';
+
+  /* Center text */
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = `bold ${fs * 14}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('74%', cx, cy + fs * 5);
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${fs * 8}px Inter, sans-serif`;
+  ctx.fillText('Form', cx, cy + fs * 16);
+  ctx.textAlign = 'left';
+
+  /* ── Key stats grid ── */
+  const statsY = H * 0.07;
+  const stats = [
+    { label: 'Avg', val: '38.4', color: 'rgba(255,143,0,0.85)' },
+    { label: 'SR',  val: '142',  color: 'rgba(74,222,128,0.85)' },
+    { label: 'Runs', val: '1,247', color: 'rgba(255,255,255,0.75)' },
   ];
-
-  const cols = 2, rows = 3;
-  const thumbW = (W * 0.86) / cols;
-  const thumbH = (H * 0.48) / rows;
-  const startX = W * 0.07, startY = H * 0.22;
-
-  slides.forEach((s, i) => {
-    const col = i % cols, row = Math.floor(i / cols);
-    const tx = startX + col * (thumbW + W * 0.04);
-    const ty = startY + row * (thumbH + H * 0.025);
-    const isActive = i === Math.floor((t * 0.007) % slides.length);
-
-    ctx.fillStyle = isActive ? 'rgba(255,143,0,0.14)' : 'rgba(255,255,255,0.03)';
-    ctx.strokeStyle = isActive ? 'rgba(255,143,0,0.5)' : 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = isActive ? 1 : 0.5;
+  stats.forEach((s, i) => {
+    const sy = statsY + i * H * 0.077;
+    ctx.fillStyle = 'rgba(255,255,255,0.025)';
     ctx.beginPath();
-    ctx.roundRect(tx, ty, thumbW - W * 0.02, thumbH - H * 0.01, 5);
+    ctx.roundRect(px, sy, W * 0.54, H * 0.065, 5);
     ctx.fill();
-    ctx.stroke();
-
-    /* Slide number */
-    ctx.fillStyle = isActive ? 'rgba(255,143,0,0.7)' : 'rgba(255,255,255,0.15)';
-    ctx.font = `${H * 0.028}px JetBrains Mono, monospace`;
-    ctx.fillText(`${String(i+1).padStart(2,'0')}`, tx + W * 0.018, ty + H * 0.038);
-
-    /* Title */
-    ctx.fillStyle = isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)';
-    ctx.font = `bold ${H * 0.033}px Inter, sans-serif`;
-    ctx.fillText(s.title, tx + W * 0.018, ty + thumbH - H * 0.02);
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.font = `${fs * 9}px Inter, sans-serif`;
+    ctx.fillText(s.label, px + fs * 8, sy + H * 0.042);
+    ctx.fillStyle = s.color;
+    ctx.font = `bold ${fs * 12}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'right';
+    ctx.fillText(s.val, px + W * 0.54 - fs * 8, sy + H * 0.045);
+    ctx.textAlign = 'left';
   });
 
-  /* AI suggestion chip */
-  const pulse = 0.8 + 0.2 * Math.sin(t * 0.05);
-  ctx.fillStyle = `rgba(255,143,0,${pulse * 0.9})`;
-  ctx.beginPath();
-  ctx.roundRect(W * 0.07, H * 0.74, W * 0.86, H * 0.08, 20);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(5,5,5,0.9)';
-  ctx.font = `bold ${H * 0.038}px Inter, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText('✦ Generate slide with AI', W / 2, H * 0.792);
-  ctx.textAlign = 'left';
+  /* ── Last 5 innings ── */
+  const inningsY = H * 0.315;
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
+  ctx.fillText('LAST 5 INNINGS', px, inningsY);
 
-  /* Progress indicator */
-  ctx.fillStyle = 'rgba(255,255,255,0.06)';
-  ctx.beginPath();
-  ctx.roundRect(W * 0.07, H * 0.85, W * 0.86, H * 0.04, 10);
-  ctx.fill();
+  const scores = [
+    { runs: 72, out: true  },
+    { runs: 34, out: false },
+    { runs: 91, out: true  },
+    { runs: 18, out: true  },
+    { runs: 54, out: false },
+  ];
+  const maxScore = 100;
+  const barAreaW = W - px * 2;
+  const barW = barAreaW / scores.length - fs * 5;
 
-  const prog = ((t * 0.003) % 1);
-  ctx.fillStyle = 'rgba(255,143,0,0.8)';
-  ctx.beginPath();
-  ctx.roundRect(W * 0.07, H * 0.85, W * 0.86 * prog, H * 0.04, 10);
-  ctx.fill();
+  scores.forEach((s, i) => {
+    const bx = px + i * (barAreaW / scores.length);
+    const bh = (s.runs / maxScore) * H * 0.145;
+    const by = inningsY + H * 0.18 - bh;
 
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.font = `${H * 0.03}px JetBrains Mono, monospace`;
-  ctx.textAlign = 'center';
-  ctx.fillText(`${Math.floor(prog * 6) + 1}/6 slides`, W / 2, H * 0.925);
+    const barGrad = ctx.createLinearGradient(0, by, 0, by + bh);
+    const col = s.out ? 'rgba(255,143,0,' : 'rgba(74,222,128,';
+    barGrad.addColorStop(0, col + '0.85)');
+    barGrad.addColorStop(1, col + '0.2)');
+    ctx.fillStyle = barGrad;
+    ctx.beginPath();
+    ctx.roundRect(bx, by, barW, bh, [3, 3, 0, 0]);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = `bold ${fs * 9}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText(s.runs, bx + barW / 2, inningsY + H * 0.195);
+    if (!s.out) {
+      ctx.fillStyle = 'rgba(74,222,128,0.7)';
+      ctx.fillText('*', bx + barW / 2 + fs * 6, inningsY + H * 0.195);
+    }
+    ctx.textAlign = 'left';
+  });
+
+  /* ── Training modules ── */
+  const modY = inningsY + H * 0.23;
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
+  ctx.fillText('TODAY\'S TRAINING', px, modY);
+
+  const modules = [
+    { name: 'Batting drills', done: true,  pct: 100 },
+    { name: 'Fitness',        done: false, pct: Math.floor(60 + 15 * Math.sin(t * 0.012)) },
+    { name: 'Video analysis', done: false, pct: 0 },
+  ];
+  modules.forEach((m, i) => {
+    const my = modY + H * 0.05 + i * H * 0.085;
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    ctx.beginPath();
+    ctx.roundRect(px, my, W - px * 2, H * 0.07, 5);
+    ctx.fill();
+
+    /* Progress fill */
+    if (m.pct > 0) {
+      ctx.fillStyle = m.done ? 'rgba(74,222,128,0.18)' : 'rgba(255,143,0,0.12)';
+      ctx.beginPath();
+      ctx.roundRect(px, my, (W - px * 2) * (m.pct / 100), H * 0.07, 5);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = m.done ? 'rgba(74,222,128,0.8)' : 'rgba(255,255,255,0.55)';
+    ctx.font = `${fs * 10}px Inter, sans-serif`;
+    ctx.fillText(m.name, px + fs * 8, my + H * 0.045);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = m.done ? 'rgba(74,222,128,0.7)' : 'rgba(255,143,0,0.65)';
+    ctx.font = `bold ${fs * 9.5}px JetBrains Mono, monospace`;
+    ctx.fillText(m.done ? '✓ Done' : `${m.pct}%`, W - px - fs * 4, my + H * 0.045);
+    ctx.textAlign = 'left';
+  });
+
+  /* ── Tab bar ── */
+  ctx.fillStyle = 'rgba(6,8,16,0.95)';
+  ctx.fillRect(0, H * 0.918, W, H * 0.082);
+  ctx.strokeStyle = 'rgba(255,143,0,0.08)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(0, H * 0.918);
+  ctx.lineTo(W, H * 0.918);
+  ctx.stroke();
+
+  ['Home', 'Stats', 'Train', 'Mindset'].forEach((label, i) => {
+    ctx.fillStyle = i === 0 ? 'rgba(255,143,0,0.9)' : 'rgba(255,255,255,0.2)';
+    ctx.font = `${fs * 8.5}px Inter, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(label, W * (0.125 + i * 0.25), H * 0.964);
+  });
   ctx.textAlign = 'left';
 }
 
 function drawPostroomScreen(ctx, W, H, t) {
-  /* Postroom Studio — design tool (laptop-proportioned) */
-  ctx.fillStyle = '#080810';
+  /* ── Postroom Studio — web design tool (laptop UI) ── */
+  ctx.fillStyle = '#05070f';
   ctx.fillRect(0, 0, W, H);
 
-  const sw = W * 0.2; /* left panel */
-  const rw = W * 0.22; /* right panel */
+  const fs = H / 220;
+  const sw = W * 0.185; /* layers panel */
+  const rw = W * 0.2;   /* properties panel */
+  const cw = W - sw - rw; /* canvas area */
 
-  /* Left panel — layers */
-  ctx.fillStyle = '#0c0e1a';
-  ctx.fillRect(0, 0, sw, H);
+  /* ── Tool bar ── */
+  ctx.fillStyle = '#0a0c18';
+  ctx.fillRect(0, 0, W, H * 0.1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(0, H * 0.1);
+  ctx.lineTo(W, H * 0.1);
+  ctx.stroke();
+
+  /* Logo */
+  ctx.fillStyle = 'rgba(232,130,12,0.9)';
+  ctx.font = `bold ${fs * 11}px Inter, sans-serif`;
+  ctx.fillText('Postroom', fs * 10, H * 0.066);
+
+  /* Menu items */
+  ['File', 'Edit', 'View', 'Insert', 'Publish'].forEach((item, i) => {
+    ctx.fillStyle = i === 4 ? 'rgba(232,220,192,0.75)' : 'rgba(255,255,255,0.28)';
+    ctx.font = i === 4 ? `bold ${fs * 9.5}px Inter, sans-serif` : `${fs * 9.5}px Inter, sans-serif`;
+    ctx.fillText(item, fs * 82 + i * (cw * 0.18), H * 0.066);
+  });
+
+  /* Publish button */
+  const selLayer = Math.floor((t * 0.006) % 5);
+  ctx.fillStyle = 'rgba(74,222,128,0.85)';
+  ctx.beginPath();
+  ctx.roundRect(W - rw - fs * 60, H * 0.025, fs * 54, H * 0.055, 4);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(5,46,22,0.9)';
+  ctx.font = `bold ${fs * 9.5}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('↑ Publish', W - rw - fs * 33, H * 0.063);
+  ctx.textAlign = 'left';
+
+  /* Zoom */
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.beginPath();
+  ctx.roundRect(W - rw - fs * 86, H * 0.026, fs * 22, H * 0.052, 3);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('100%', W - rw - fs * 75, H * 0.062);
+  ctx.textAlign = 'left';
+
+  /* ── Left layers panel ── */
+  ctx.fillStyle = '#090b16';
+  ctx.fillRect(0, H * 0.1, sw, H - H * 0.1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(sw, H * 0.1);
+  ctx.lineTo(sw, H);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.14)';
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.fillText('LAYERS', fs * 9, H * 0.15);
+
+  const layers = [
+    { name: 'Headline',    icon: 'T', color: 'rgba(232,130,12,0.8)' },
+    { name: 'Sub-copy',    icon: 'T', color: 'rgba(255,255,255,0.4)' },
+    { name: 'CTA button',  icon: '⬛', color: 'rgba(74,222,128,0.7)' },
+    { name: 'Hero image',  icon: '🖼', color: 'rgba(139,92,246,0.7)' },
+    { name: 'Nav bar',     icon: '≡', color: 'rgba(46,91,255,0.7)' },
+  ];
+  layers.forEach((l, i) => {
+    const ly = H * (0.185 + i * 0.115);
+    const isSel = i === selLayer;
+    if (isSel) {
+      ctx.fillStyle = 'rgba(232,130,12,0.1)';
+      ctx.fillRect(0, ly - H * 0.023, sw, H * 0.1);
+    }
+    /* Icon box */
+    ctx.fillStyle = isSel ? 'rgba(232,130,12,0.85)' : 'rgba(255,255,255,0.08)';
+    ctx.beginPath();
+    ctx.roundRect(fs * 7, ly - fs * 5, fs * 12, fs * 12, 2);
+    ctx.fill();
+    ctx.fillStyle = isSel ? '#fff' : 'rgba(255,255,255,0.25)';
+    ctx.font = `${fs * 8}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(l.icon, fs * 13, ly + fs * 4);
+    ctx.textAlign = 'left';
+    /* Name */
+    ctx.fillStyle = isSel ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.32)';
+    ctx.font = `${fs * 9.5}px Inter, sans-serif`;
+    ctx.fillText(l.name, fs * 24, ly + fs * 4.5);
+  });
+
+  /* ── Canvas area (centre) ── */
+  ctx.fillStyle = '#07091a';
+  ctx.fillRect(sw, H * 0.1, cw, H - H * 0.1);
+
+  /* Dot grid */
+  const gsp = fs * 18;
+  ctx.fillStyle = 'rgba(255,255,255,0.035)';
+  for (let gx = sw + gsp; gx < sw + cw; gx += gsp)
+    for (let gy = H * 0.1 + gsp; gy < H; gy += gsp) {
+      ctx.beginPath(); ctx.arc(gx, gy, 0.8, 0, Math.PI * 2); ctx.fill();
+    }
+
+  /* The page canvas — centered */
+  const pgX = sw + cw * 0.07, pgY = H * 0.15;
+  const pgW = cw * 0.86, pgH = H * 0.79;
+
+  /* Page shadow */
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = fs * 18;
+  ctx.fillStyle = '#090b18';
+  ctx.beginPath();
+  ctx.roundRect(pgX, pgY, pgW, pgH, 5);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  /* Fake browser chrome */
+  ctx.fillStyle = '#0d0f1f';
+  ctx.fillRect(pgX, pgY, pgW, pgH * 0.06);
+  [0.12, 0.2, 0.28].forEach((fx, fi) => {
+    const cols = ['#ff5f57', '#ffbd2e', '#28ca42'];
+    ctx.fillStyle = cols[fi];
+    ctx.beginPath();
+    ctx.arc(pgX + pgW * fx, pgY + pgH * 0.03, fs * 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.beginPath();
+  ctx.roundRect(pgX + pgW * 0.35, pgY + pgH * 0.012, pgW * 0.3, pgH * 0.038, 10);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = `${fs * 8}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('postroom.studio', pgX + pgW * 0.5, pgY + pgH * 0.038);
+  ctx.textAlign = 'left';
+
+  /* Page content */
+  const pcY = pgY + pgH * 0.07;
+
+  /* Nav in page */
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.fillRect(pgX, pcY, pgW, pgH * 0.08);
+  ctx.fillStyle = 'rgba(232,220,192,0.6)';
+  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
+  ctx.fillText('Postroom', pgX + pgW * 0.05, pcY + pgH * 0.052);
+  ['Work', 'About', 'Contact'].forEach((label, i) => {
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = `${fs * 8.5}px Inter, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText(label, pgX + pgW * (0.7 + i * 0.12), pcY + pgH * 0.052);
+  });
+  ctx.textAlign = 'left';
+
+  /* Headline block — with selection box on it */
+  const hlY = pcY + pgH * 0.12;
+  ctx.fillStyle = 'rgba(232,220,192,0.88)';
+  ctx.font = `bold ${fs * 20}px DM Serif Display, Georgia, serif`;
+  ctx.fillText('Visual stories', pgX + pgW * 0.06, hlY);
+  ctx.fillStyle = 'rgba(232,130,12,0.85)';
+  ctx.fillText('that move.', pgX + pgW * 0.06, hlY + fs * 22);
+
+  /* Blinking cursor at end of headline */
+  const cursorBlink = Math.sin(t * 0.12) > 0;
+  if (cursorBlink) {
+    const tw = ctx.measureText('that move.').width;
+    ctx.fillStyle = 'rgba(232,130,12,0.9)';
+    ctx.fillRect(pgX + pgW * 0.06 + tw + 2, hlY + fs * 5, 2, fs * 17);
+  }
+
+  /* Sub-copy lines */
+  [0, 1].forEach(i => {
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath();
+    ctx.roundRect(pgX + pgW * 0.06, hlY + fs * 32 + i * fs * 11, pgW * (0.45 - i * 0.08), fs * 8, 2);
+    ctx.fill();
+  });
+
+  /* CTA button in page */
+  const ctaY = hlY + fs * 58;
+  const ctaGrad = ctx.createLinearGradient(pgX + pgW * 0.06, 0, pgX + pgW * 0.06 + pgW * 0.24, 0);
+  ctaGrad.addColorStop(0, 'rgba(232,220,192,0.9)');
+  ctaGrad.addColorStop(1, 'rgba(232,130,12,0.8)');
+  ctx.fillStyle = ctaGrad;
+  ctx.beginPath();
+  ctx.roundRect(pgX + pgW * 0.06, ctaY, pgW * 0.24, fs * 16, 20);
+  ctx.fill();
+  ctx.fillStyle = '#050810';
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('See our work →', pgX + pgW * 0.06 + pgW * 0.12, ctaY + fs * 10.5);
+  ctx.textAlign = 'left';
+
+  /* Selection border around headline */
+  const selX = pgX + pgW * 0.04, selY2 = hlY - fs * 4;
+  const selW = pgW * 0.62, selH = fs * 48;
+  ctx.strokeStyle = '#2E5BFF';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  ctx.strokeRect(selX, selY2, selW, selH);
+  [[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]].forEach(([hx, hy]) => {
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#2E5BFF';
+    ctx.lineWidth = 0.8;
+    ctx.fillRect(selX + selW * hx - fs * 2.5, selY2 + selH * hy - fs * 2.5, fs * 5, fs * 5);
+    ctx.strokeRect(selX + selW * hx - fs * 2.5, selY2 + selH * hy - fs * 2.5, fs * 5, fs * 5);
+  });
+
+  /* ── Right properties panel ── */
+  ctx.fillStyle = '#090b16';
+  ctx.fillRect(W - rw, H * 0.1, rw, H - H * 0.1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(W - rw, H * 0.1);
+  ctx.lineTo(W - rw, H);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.14)';
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.fillText('STYLE', W - rw + fs * 9, H * 0.15);
+
+  /* Element name */
+  ctx.fillStyle = 'rgba(232,130,12,0.8)';
+  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+  ctx.fillText('Headline', W - rw + fs * 9, H * 0.19);
+
+  const props = [
+    { label: 'Font',   val: 'DM Serif Display' },
+    { label: 'Size',   val: `${fs * 20 | 0}px` },
+    { label: 'Weight', val: '700' },
+    { label: 'Color',  val: '#E8DCC0' },
+    { label: 'Align',  val: 'Left' },
+    { label: 'Line H', val: '1.1' },
+  ];
+  props.forEach((p, i) => {
+    const py = H * (0.23 + i * 0.098);
+    ctx.fillStyle = 'rgba(255,255,255,0.16)';
+    ctx.font = `${fs * 8.5}px Inter, sans-serif`;
+    ctx.fillText(p.label, W - rw + fs * 9, py);
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath();
+    ctx.roundRect(W - rw + fs * 9, py + fs * 3, rw - fs * 18, fs * 12, 3);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(232,130,12,0.7)';
+    ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'right';
+    ctx.fillText(p.val, W - fs * 11, py + fs * 11.5);
+    ctx.textAlign = 'left';
+  });
+}
 
   ctx.fillStyle = 'rgba(255,255,255,0.08)';
   ctx.fillRect(0, 0, sw, H * 0.11);
@@ -1607,6 +2242,9 @@ function initProjectPreviews() {
 
   const dpr = Math.min(window.devicePixelRatio, 2);
 
+  /* Defer canvas setup until Google Fonts are loaded — canvas text needs them */
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+
   configs.forEach(cfg => {
     const wrap = document.getElementById(cfg.id);
     if (!wrap) return;
@@ -1644,6 +2282,8 @@ function initProjectPreviews() {
 
     new ResizeObserver(() => setSize()).observe(wrap);
   });
+
+  }); /* end document.fonts.ready */
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1886,79 +2526,179 @@ function initCursor() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SOUND SYSTEM  (Web Audio API synthesis — no files needed)
+   SOUND SYSTEM  — Fmaj7 chord pad + convolution reverb + melody
+   Feels like ambient electronic / late-night coding session
    ═══════════════════════════════════════════════════════════════════ */
 const Sound = (function () {
-  let ac = null, isOn = false;
-  let ambientSource = null, ambientGain = null;
+  let ac = null, isOn = false, started = false;
+  let ambientGain = null, melodyDest = null;
   const KEY = 'portfolio_sound';
 
   function getCtx() {
     if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
-    /* Chrome suspends AudioContext even after user gesture — must resume explicitly */
     if (ac.state === 'suspended') ac.resume();
     return ac;
   }
 
-  /* Brown noise through a gentle low-pass — warm hum */
+  /* Convolution reverb — exponentially-decaying noise impulse response */
+  function createReverb(a, seconds) {
+    const conv = a.createConvolver();
+    const len  = Math.ceil(a.sampleRate * seconds);
+    const ir   = a.createBuffer(2, len, a.sampleRate);
+    for (let c = 0; c < 2; c++) {
+      const ch = ir.getChannelData(c);
+      for (let i = 0; i < len; i++) {
+        ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
+      }
+    }
+    conv.buffer = ir;
+    return conv;
+  }
+
+  /* Main ambient: Fmaj7 pad (F2 sub + F3 A3 C4 E4 + A4 shimmer) */
   function startAmbient() {
     const a = getCtx();
-    const buf = a.createBuffer(1, a.sampleRate * 4, a.sampleRate);
-    const data = buf.getChannelData(0);
-    let last = 0;
-    for (let i = 0; i < data.length; i++) {
-      const w = Math.random() * 2 - 1;
-      last = (last + 0.02 * w) / 1.02;
-      data[i] = last * 3.5;
-    }
 
-    const src = a.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-
-    const lpf = a.createBiquadFilter();
-    lpf.type = 'lowpass';
-    lpf.frequency.value = 700; /* audible warmth, not muffled */
+    /* Output: master → compressor → destination */
+    const comp = a.createDynamicsCompressor();
+    comp.threshold.value = -16;
+    comp.knee.value = 8;
+    comp.ratio.value = 4;
+    comp.attack.value  = 0.003;
+    comp.release.value = 0.25;
+    comp.connect(a.destination);
 
     ambientGain = a.createGain();
     ambientGain.gain.value = 0;
+    ambientGain.connect(comp);
 
-    src.connect(lpf);
-    lpf.connect(ambientGain);
-    ambientGain.connect(a.destination);
-    src.start();
-    ambientSource = src;
+    /* Reverb (wet) */
+    const reverb     = createReverb(a, 4.5);
+    const reverbGain = a.createGain();
+    reverbGain.gain.value = 0.7;
+    reverb.connect(reverbGain);
+    reverbGain.connect(ambientGain);
 
-    /* Fade in to 0.15 — clearly audible */
-    ambientGain.gain.linearRampToValueAtTime(0.15, a.currentTime + 1.8);
+    /* Warm LPF — feeds both dry and reverb */
+    const lpf = a.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.value = 1500;
+    lpf.Q.value = 0.5;
+    lpf.connect(reverb);
+    const dryGain = a.createGain();
+    dryGain.gain.value = 0.35;
+    lpf.connect(dryGain);
+    dryGain.connect(ambientGain);
+
+    /* Slow LFO sweeps the filter — gives movement to the pad */
+    const lfoF = a.createOscillator();
+    lfoF.type = 'sine';
+    lfoF.frequency.value = 0.038;
+    const lfoFGain = a.createGain();
+    lfoFGain.gain.value = 350;
+    lfoF.connect(lfoFGain);
+    lfoFGain.connect(lpf.frequency);
+    lfoF.start();
+
+    /* Chord voicing: Fmaj7 — warm, hopeful, sophisticated */
+    [
+      { f: 87.3,  v: 0.10 }, /* F2  sub */
+      { f: 174.6, v: 0.13 }, /* F3  root */
+      { f: 220.0, v: 0.11 }, /* A3  major third */
+      { f: 261.6, v: 0.10 }, /* C4  fifth */
+      { f: 329.6, v: 0.09 }, /* E4  major seventh */
+      { f: 440.0, v: 0.028 },/* A4  shimmer */
+    ].forEach(({ f, v }) => {
+      /* Two detuned oscillators per chord tone → stereo width */
+      [-2.8, 2.8].forEach(d => {
+        const osc = a.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        osc.detune.value = d;
+        const g = a.createGain();
+        g.gain.value = v * 0.5;
+        osc.connect(g);
+        g.connect(lpf);
+        osc.start();
+      });
+    });
+
+    /* Breathing LFO on master — makes the pad feel alive */
+    const breathLFO = a.createOscillator();
+    breathLFO.type = 'sine';
+    breathLFO.frequency.value = 0.065; /* ~15 s per breath */
+    const breathGain = a.createGain();
+    breathGain.gain.value = 0.016;
+    breathLFO.connect(breathGain);
+    breathGain.connect(ambientGain.gain);
+    breathLFO.start();
+
+    /* Melody destination — melody notes route here */
+    melodyDest = lpf;
+
+    /* Start first melodic phrase after 3.5 s */
+    setTimeout(() => scheduleMelody(a), 3500);
+
+    /* Fade in over 2.5 s */
+    ambientGain.gain.linearRampToValueAtTime(0.13, a.currentTime + 2.5);
+    started = true;
   }
 
-  /* Short key-tap click */
-  function synthClick() {
-    const a = getCtx();
-    const osc = a.createOscillator(), gain = a.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(900, a.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(350, a.currentTime + 0.04);
-    gain.gain.setValueAtTime(0.08, a.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.07);
-    osc.connect(gain); gain.connect(a.destination);
-    osc.start(); osc.stop(a.currentTime + 0.08);
-  }
-
-  /* Two-tone chime on form submit */
-  function synthPing() {
-    const a = getCtx();
-    [[880, 0], [1320, 0.1]].forEach(([freq, delay]) => {
-      const osc = a.createOscillator(), gain = a.createGain();
+  /* Slow melodic phrase — Fmaj7 scale fragment, repeats with rests */
+  function scheduleMelody(a) {
+    if (!isOn || !melodyDest) return;
+    /* F4 A4 C5 E5 C5 A4 — ascending then descending */
+    const phrase = [
+      [349.2, 2.0], [440, 1.8], [523.3, 2.0],
+      [659.3, 2.8], [523.3, 1.8], [440, 2.2],
+    ];
+    let sched = a.currentTime;
+    phrase.forEach(([freq, dur]) => {
+      const osc = a.createOscillator();
+      const g   = a.createGain();
       osc.type = 'sine';
       osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, a.currentTime + delay);
-      gain.gain.linearRampToValueAtTime(0.1, a.currentTime + delay + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + delay + 0.6);
-      osc.connect(gain); gain.connect(a.destination);
+      g.gain.setValueAtTime(0, sched);
+      g.gain.linearRampToValueAtTime(0.017, sched + 0.2);
+      g.gain.setValueAtTime(0.017, sched + dur - 0.35);
+      g.gain.linearRampToValueAtTime(0, sched + dur);
+      osc.connect(g);
+      g.connect(melodyDest);
+      osc.start(sched);
+      osc.stop(sched + dur + 0.05);
+      sched += dur;
+    });
+    /* Repeat: total phrase duration + 4 s rest */
+    const total = phrase.reduce((s, [, d]) => s + d, 0);
+    setTimeout(() => scheduleMelody(a), (total + 4) * 1000);
+  }
+
+  /* Crisp key-tap using triangle wave */
+  function synthClick() {
+    const a = getCtx();
+    const osc = a.createOscillator(), g = a.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1100, a.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(380, a.currentTime + 0.03);
+    g.gain.setValueAtTime(0.055, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.055);
+    osc.connect(g); g.connect(a.destination);
+    osc.start(); osc.stop(a.currentTime + 0.06);
+  }
+
+  /* Three-note ascending chime — C6→E6→G6 */
+  function synthPing() {
+    const a = getCtx();
+    [[1046.5, 0], [1318.5, 0.13], [1568, 0.28]].forEach(([freq, delay]) => {
+      const osc = a.createOscillator(), g = a.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0, a.currentTime + delay);
+      g.gain.linearRampToValueAtTime(0.065, a.currentTime + delay + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + delay + 0.75);
+      osc.connect(g); g.connect(a.destination);
       osc.start(a.currentTime + delay);
-      osc.stop(a.currentTime + delay + 0.65);
+      osc.stop(a.currentTime + delay + 0.8);
     });
   }
 
@@ -1966,14 +2706,15 @@ const Sound = (function () {
     toggle() {
       isOn = !isOn;
       if (isOn) {
-        if (!ambientSource) {
+        if (!started) {
           startAmbient();
         } else {
-          getCtx(); /* ensures resume() is called */
-          ambientGain.gain.linearRampToValueAtTime(0.15, ac.currentTime + 1.5);
+          getCtx();
+          ambientGain.gain.linearRampToValueAtTime(0.13, ac.currentTime + 1.5);
+          setTimeout(() => scheduleMelody(ac), 1500);
         }
       } else {
-        if (ambientGain) ambientGain.gain.linearRampToValueAtTime(0, ac.currentTime + 1);
+        if (ambientGain) ambientGain.gain.linearRampToValueAtTime(0, ac.currentTime + 1.2);
       }
       localStorage.setItem(KEY, isOn ? 'on' : 'off');
       return isOn;
