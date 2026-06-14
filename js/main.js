@@ -75,6 +75,23 @@ const CASE_STUDIES = {
     live: 'https://postroom-studio.vercel.app/',
     github: 'https://github.com/PoisonOps',
   },
+  pageautopsy: {
+    eyebrow: 'Project 05 · AI Tool',
+    title: 'PageAutopsy',
+    tagline: 'Brutal AI audit of any landing page. Free. 20 seconds.',
+    color: '#FF4D00',
+    problem: 'Most landing page feedback is polite and useless. Founders need a fast, specific, actionable breakdown of what\'s actually killing their conversions — not generic advice.',
+    solution: 'Built a server-side scraper + AI pipeline (Gemini 2.0 Flash with Groq fallback) that returns a scored, section-by-section roast with exact copy rewrites. Built in 1 day. Zero running cost.',
+    metrics: [
+      { val: '1 day', label: 'Idea to live' },
+      { val: '5', label: 'Scored dimensions' },
+      { val: '0', label: 'Running cost' },
+    ],
+    stack: ['Vanilla JS', 'Vercel Functions', 'Gemini 2.0 Flash', 'Groq LLaMA 70B'],
+    honesty: 'The scraper fails on JS-heavy SPAs (can\'t execute JS server-side). I\'d add Playwright or a headless browser to fix this. Also the "pages roasted" counter is seeded — it\'s not real data yet.',
+    live: 'https://pageautopsy.vercel.app',
+    github: 'https://github.com/PoisonOps/pageautopsy',
+  },
 };
 
 const MARQUEE_ITEMS = [
@@ -82,6 +99,7 @@ const MARQUEE_ITEMS = [
   '● GharKhata shipped in 2 days',
   '● PitchReady shipped in 1 day',
   '● Postroom Studio — designed & shipped',
+  '● PageAutopsy — AI audit tool shipped in 1 day',
   '<span class="marquee-live">● NEXT SLOT: AVAILABLE NOW</span>',
   '● 7-DAY DELIVERY · FROM ₹15,000',
 ];
@@ -2018,14 +2036,135 @@ function drawPostroomScreen(ctx, W, H, t) {
   ctx.textBaseline = 'alphabetic';
 }
 
+function drawPageAutopsyScreen(ctx, W, H, t) {
+  /* ── PageAutopsy — AI audit results page, laptop 16:10 ── */
+  ctx.fillStyle = '#08080A';
+  ctx.fillRect(0, 0, W, H);
+
+  const fs  = H / 300;
+  const px  = W * 0.05;
+  const acc = '#FF4D00';
+  const pass = '#22C55E';
+  const warn = '#F59E0B';
+  const fail = '#EF4444';
+
+  /* Ambient orange glow top-left */
+  const amb = ctx.createRadialGradient(W * 0.2, 0, 0, W * 0.2, 0, H * 0.65);
+  amb.addColorStop(0, 'rgba(255,77,0,0.09)');
+  amb.addColorStop(1, 'transparent');
+  ctx.fillStyle = amb;
+  ctx.fillRect(0, 0, W, H);
+
+  /* ── Nav bar ── */
+  ctx.fillStyle = 'rgba(16,16,20,0.96)';
+  ctx.fillRect(0, 0, W, H * 0.11);
+  ctx.strokeStyle = 'rgba(28,28,34,1)';
+  ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.moveTo(0, H * 0.11); ctx.lineTo(W, H * 0.11); ctx.stroke();
+  ctx.fillStyle = acc;
+  ctx.font = `bold ${fs * 11}px Inter, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText('☠ PageAutopsy', px, H * 0.055);
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = `${fs * 8}px Inter, sans-serif`;
+  ctx.textAlign = 'right';
+  ctx.fillText('catalyst-app-six.vercel.app', W - px, H * 0.055);
+  ctx.textAlign = 'left';
+
+  /* ── Score ring (left) ── */
+  const ringCX = W * 0.19;
+  const ringCY = H * 0.39;
+  const ringR  = Math.min(W * 0.1, H * 0.16);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = fs * 4;
+  ctx.beginPath(); ctx.arc(ringCX, ringCY, ringR, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = warn;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(ringCX, ringCY, ringR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * 0.71); ctx.stroke();
+  ctx.lineCap = 'butt';
+
+  ctx.fillStyle = '#F2EFE8';
+  ctx.font = `bold ${fs * 20}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('71', ringCX, ringCY + fs * 6);
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  ctx.font = `${fs * 8}px Inter, sans-serif`;
+  ctx.fillText('/100', ringCX, ringCY + fs * 17);
+  ctx.fillStyle = warn;
+  ctx.font = `bold ${fs * 7}px JetBrains Mono, monospace`;
+  ctx.fillText('NEEDS IMPROVEMENT', ringCX, ringCY + fs * 29);
+  ctx.textAlign = 'left';
+
+  /* ── Score bars (right panel) ── */
+  const barX = W * 0.37;
+  const barW = W * 0.57;
+  const sections = [
+    { label: 'HEADLINE',      score: 8, color: pass },
+    { label: 'CTA STRENGTH',  score: 6, color: warn },
+    { label: 'TRUST SIGNALS', score: 4, color: fail },
+    { label: 'BODY COPY',     score: 7, color: pass },
+  ];
+  const rowH = H * 0.075;
+  sections.forEach((s, i) => {
+    const sy = H * 0.18 + i * rowH;
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = `${fs * 7}px JetBrains Mono, monospace`;
+    ctx.fillText(s.label, barX, sy + fs * 8);
+    ctx.fillStyle = s.color;
+    ctx.textAlign = 'right';
+    ctx.fillText(s.score + '/10', barX + barW, sy + fs * 8);
+    ctx.textAlign = 'left';
+    const bY = sy + fs * 13;
+    const bH = fs * 3;
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath(); ctx.roundRect(barX, bY, barW, bH, 2); ctx.fill();
+    ctx.fillStyle = s.color;
+    ctx.beginPath(); ctx.roundRect(barX, bY, barW * (s.score / 10), bH, 2); ctx.fill();
+  });
+
+  /* ── Roast card at bottom ── */
+  const cardY = H * 0.63;
+  const cardH = H * 0.31;
+  ctx.fillStyle = 'rgba(20,20,26,0.9)';
+  ctx.beginPath(); ctx.roundRect(px, cardY, W - px * 2, cardH, 8); ctx.fill();
+  ctx.strokeStyle = 'rgba(239,68,68,0.25)';
+  ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.roundRect(px, cardY, W - px * 2, cardH, 8); ctx.stroke();
+
+  const ip = W * 0.04;
+  ctx.fillStyle = fail;
+  ctx.font = `bold ${fs * 8}px JetBrains Mono, monospace`;
+  ctx.fillText('TRUST SIGNALS', px + ip, cardY + H * 0.075);
+  ctx.textAlign = 'right';
+  ctx.fillText('4/10', W - px - ip, cardY + H * 0.075);
+  ctx.textAlign = 'left';
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(px + ip, cardY + H * 0.1); ctx.lineTo(W - px - ip, cardY + H * 0.1); ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = `${fs * 7.5}px Inter, sans-serif`;
+  const lines = [
+    '"Start your build" says nothing about what the client',
+    'gets. Add social proof. Rewrite CTAs with specific',
+    'outcomes. No verifiable testimonials above the fold.',
+  ];
+  lines.forEach((line, i) => {
+    ctx.fillText(line, px + ip, cardY + H * 0.14 + i * H * 0.065);
+  });
+}
+
 function initProjectPreviews() {
   const configs = [
-    { id: 'preview-hero-laptop', draw: drawCATalystScreen },
-    { id: 'preview-hero-phone',  draw: drawGharKhataScreen },
+    { id: 'preview-hero-laptop',  draw: drawCATalystScreen },
+    { id: 'preview-hero-phone',   draw: drawGharKhataScreen },
     /* preview-catalyst replaced by <video catalyst.mp4> */
-    { id: 'preview-gharkhata',   draw: drawGharKhataScreen },
-    { id: 'preview-pitchready',  draw: drawPitchReadyScreen },
+    { id: 'preview-gharkhata',    draw: drawGharKhataScreen },
+    { id: 'preview-pitchready',   draw: drawPitchReadyScreen },
     /* preview-postroom replaced by <video postroom.mp4> */
+    { id: 'preview-pageautopsy',  draw: drawPageAutopsyScreen },
   ];
 
   const dpr = Math.min(window.devicePixelRatio, 2);

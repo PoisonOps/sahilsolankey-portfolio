@@ -1597,6 +1597,10 @@ section { position: relative; }
   display: flex; flex-direction: column; gap: 20px;
 }
 .social-card-cta { background: rgba(255,255,255,0.02); justify-content: space-between; }
+.social-card-process { background: rgba(232,130,12,0.04); border-color: rgba(232,130,12,0.15); justify-content: space-between; }
+.process-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.process-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 0.92rem; color: rgba(233,229,220,0.82); line-height: 1.5; }
+.process-step-num { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent); background: rgba(232,130,12,0.12); border: 1px solid rgba(232,130,12,0.2); border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
 .social-quote { font-size: 1rem; line-height: 1.65; color: rgba(233,229,220,0.82); font-style: italic; }
 .social-quote::before { content: '"'; color: var(--accent); font-style: normal; }
 .social-author { display: flex; align-items: center; gap: 12px; }
