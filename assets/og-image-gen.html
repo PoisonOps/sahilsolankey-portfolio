@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#050810;width:1200px;height:630px;font-family:system-ui">
+<canvas id="c" width="1200" height="630"></canvas>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+// Background
+ctx.fillStyle = '#050810';
+ctx.fillRect(0,0,1200,630);
+// Accent glow
+const g = ctx.createRadialGradient(300,200,0,300,200,500);
+g.addColorStop(0,'rgba(232,130,12,0.18)');
+g.addColorStop(1,'transparent');
+ctx.fillStyle = g;
+ctx.fillRect(0,0,1200,630);
+// Blue glow
+const g2 = ctx.createRadialGradient(900,400,0,900,400,400);
+g2.addColorStop(0,'rgba(46,91,255,0.12)');
+g2.addColorStop(1,'transparent');
+ctx.fillStyle = g2;
+ctx.fillRect(0,0,1200,630);
+// Border
+ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+ctx.lineWidth = 1;
+ctx.strokeRect(40,40,1120,550);
+// Eyebrow
+ctx.fillStyle = 'rgba(232,130,12,0.85)';
+ctx.font = '500 18px JetBrains Mono,monospace';
+ctx.fillText('FULL-STACK DEVELOPER & AI ENGINEER', 80, 180);
+// Name
+ctx.fillStyle = '#E9E5DC';
+ctx.font = 'bold 80px Georgia,serif';
+ctx.fillText('Sahil Solankey', 80, 290);
+// Tagline
+ctx.fillStyle = 'rgba(233,229,220,0.5)';
+ctx.font = '28px system-ui,sans-serif';
+ctx.fillText('Idea to deployed in 7 days.', 80, 360);
+// Stats row
+const stats = ['794 questions shipped','4 live products','₹489 one-time'];
+ctx.font = '500 17px JetBrains Mono,monospace';
+stats.forEach((s,i) => {
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.fillText('● ' + s, 80 + i * 340, 440);
+});
+// URL
+ctx.fillStyle = 'rgba(255,255,255,0.18)';
+ctx.font = '16px JetBrains Mono,monospace';
+ctx.fillText('sahilsolankey.vercel.app', 80, 560);
+console.log(c.toDataURL('image/png'));
+</script>
+</body>
+</html>

@@ -3053,11 +3053,13 @@ function initAvailabilityNudge() {
     `<button class="nudge-close" aria-label="Dismiss">✕</button>`;
   document.body.appendChild(bar);
 
+  const fab = document.getElementById('fab-whatsapp');
   let shown = false;
   function show() {
     if (shown) return;
     shown = true;
     bar.classList.add('visible');
+    if (fab) fab.style.bottom = (bar.offsetHeight + 12) + 'px';
   }
 
   const tid = setTimeout(show, 45000);
@@ -3070,6 +3072,7 @@ function initAvailabilityNudge() {
 
   bar.querySelector('.nudge-close').addEventListener('click', () => {
     bar.classList.remove('visible');
+    if (fab) fab.style.bottom = '';
     sessionStorage.setItem('nudge_dismissed', '1');
     clearTimeout(tid);
     window.removeEventListener('scroll', onScroll);

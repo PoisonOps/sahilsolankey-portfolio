@@ -1,23 +1,71 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#050810"/>
-  <rect x="0" y="0" width="1200" height="630" fill="url(#grad)"/>
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="grad" cx="30%" cy="50%" r="60%">
-      <stop offset="0%" stop-color="#E8820C" stop-opacity="0.12"/>
+    <radialGradient id="g1" cx="25%" cy="32%" r="50%">
+      <stop offset="0%" stop-color="#E8820C" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#050810" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g2" cx="80%" cy="65%" r="45%">
+      <stop offset="0%" stop-color="#2E5BFF" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#050810" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g3" cx="55%" cy="10%" r="35%">
+      <stop offset="0%" stop-color="#4ADE80" stop-opacity="0.07"/>
       <stop offset="100%" stop-color="#050810" stop-opacity="0"/>
     </radialGradient>
   </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#050810"/>
+  <!-- Gradient orbs -->
+  <rect width="1200" height="630" fill="url(#g1)"/>
+  <rect width="1200" height="630" fill="url(#g2)"/>
+  <rect width="1200" height="630" fill="url(#g3)"/>
+
   <!-- Border -->
-  <rect x="1" y="1" width="1198" height="628" fill="none" stroke="#1A1E2A" stroke-width="2"/>
+  <rect x="1" y="1" width="1198" height="628" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+
+  <!-- Left accent line -->
+  <line x1="80" y1="140" x2="80" y2="490" stroke="#E8820C" stroke-width="2" opacity="0.6"/>
+
   <!-- Eyebrow -->
-  <text x="80" y="200" font-family="'Courier New', monospace" font-size="18" fill="#8A8FA3" letter-spacing="4">FULL-STACK DEVELOPER &amp; AI ENGINEER</text>
-  <!-- Main headline -->
-  <text x="80" y="300" font-family="Georgia, serif" font-size="72" fill="#E9E5DC" font-weight="400">Sahil Solankey</text>
-  <text x="80" y="380" font-family="Georgia, serif" font-size="48" fill="#E8820C" font-weight="400">I build products in 7 days.</text>
-  <!-- Sub -->
-  <text x="80" y="450" font-family="'Courier New', monospace" font-size="20" fill="#8A8FA3">4 live products · Web · Mobile · Desktop · AI</text>
-  <!-- URL -->
-  <text x="80" y="560" font-family="'Courier New', monospace" font-size="16" fill="#4ADE80">sahilsolankey.vercel.app</text>
-  <!-- Live dot -->
-  <circle cx="60" cy="556" r="6" fill="#4ADE80"/>
+  <text x="100" y="200" font-family="'Courier New', monospace" font-size="15" fill="#E8820C" opacity="0.85" letter-spacing="3">FULL-STACK DEVELOPER &amp; AI ENGINEER</text>
+
+  <!-- Name -->
+  <text x="100" y="300" font-family="Georgia, serif" font-size="76" font-weight="bold" fill="#E9E5DC">Sahil Solankey</text>
+
+  <!-- Tagline -->
+  <text x="100" y="360" font-family="Georgia, serif" font-size="30" fill="#E9E5DC" opacity="0.5">Idea to deployed in</text>
+  <text x="490" y="360" font-family="Georgia, serif" font-size="30" fill="#E8820C" font-style="italic"> 7 days.</text>
+
+  <!-- Divider -->
+  <line x1="100" y1="400" x2="600" y2="400" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- Stats row -->
+  <text x="100" y="440" font-family="'Courier New', monospace" font-size="14" fill="rgba(255,255,255,0.35)">● 4 live products shipped solo</text>
+  <text x="370" y="440" font-family="'Courier New', monospace" font-size="14" fill="rgba(255,255,255,0.35)">● Web · Mobile · AI</text>
+  <text x="560" y="440" font-family="'Courier New', monospace" font-size="14" fill="rgba(255,255,255,0.35)">● Available now</text>
+
+  <!-- Project dots -->
+  <circle cx="100" cy="500" r="6" fill="#2E5BFF"/>
+  <text x="115" y="505" font-family="'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.3)">CATalyst</text>
+  <circle cx="230" cy="500" r="6" fill="#00C853"/>
+  <text x="245" y="505" font-family="'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.3)">GharKhata</text>
+  <circle cx="375" cy="500" r="6" fill="#FF8F00"/>
+  <text x="390" y="505" font-family="'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.3)">PitchReady</text>
+  <circle cx="520" cy="500" r="6" fill="#E8DCC0"/>
+  <text x="535" y="505" font-family="'Courier New', monospace" font-size="13" fill="rgba(255,255,255,0.3)">Postroom</text>
+
+  <!-- URL bottom right -->
+  <text x="1100" y="590" font-family="'Courier New', monospace" font-size="14" fill="rgba(255,255,255,0.2)" text-anchor="end">sahilsolankey.vercel.app</text>
+
+  <!-- Decorative right panel -->
+  <rect x="820" y="100" width="300" height="420" rx="12" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <text x="970" y="170" font-family="'Courier New', monospace" font-size="11" fill="rgba(255,255,255,0.2)" text-anchor="middle" letter-spacing="2">LAST SHIPPED</text>
+  <text x="970" y="230" font-family="Georgia, serif" font-size="42" font-weight="bold" fill="#E9E5DC" text-anchor="middle">7 days</text>
+  <text x="970" y="265" font-family="'Courier New', monospace" font-size="12" fill="rgba(255,255,255,0.25)" text-anchor="middle">idea → deployed</text>
+  <line x1="870" y1="290" x2="1070" y2="290" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <text x="970" y="335" font-family="'Courier New', monospace" font-size="11" fill="rgba(255,255,255,0.2)" text-anchor="middle" letter-spacing="2">AVAILABLE FOR</text>
+  <text x="970" y="370" font-family="Georgia, serif" font-size="20" fill="#E8820C" text-anchor="middle">Your next project</text>
+  <rect x="900" y="410" width="140" height="38" rx="19" fill="#E8820C"/>
+  <text x="970" y="434" font-family="'Courier New', monospace" font-size="13" font-weight="bold" fill="#050810" text-anchor="middle">Let's talk →</text>
 </svg>
