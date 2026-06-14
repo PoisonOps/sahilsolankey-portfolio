@@ -129,11 +129,14 @@ function initHeroGradient() {
 
   function buildPoints() {
     points = [
-      { x: 0.15, y: 0.3,  r: 0.55, h: 220, s: 0.7, l: 0.08, vx: 0.0002, vy: 0.00015 },
-      { x: 0.8,  y: 0.6,  r: 0.5,  h: 24,  s: 0.9, l: 0.06, vx: -0.00018, vy: 0.0002 },
-      { x: 0.5,  y: 0.85, r: 0.45, h: 270, s: 0.6, l: 0.05, vx: 0.00022, vy: -0.00012 },
-      { x: 0.9,  y: 0.1,  r: 0.4,  h: 45,  s: 0.8, l: 0.04, vx: -0.0002, vy: 0.00025 },
-      { x: 0.1,  y: 0.9,  r: 0.35, h: 190, s: 0.7, l: 0.035,vx: 0.00015, vy: -0.0002 },
+      /* amber — primary large orb (0.6x speed) */
+      { x: 0.18, y: 0.32, r: 0.52, h: 33,  s: 0.9,  l: 0.08,  vx: 0.00012,  vy: 0.00009 },
+      /* blue — secondary orb */
+      { x: 0.78, y: 0.58, r: 0.46, h: 225, s: 1.0,  l: 0.06,  vx: -0.000108, vy: 0.00012 },
+      /* green — tertiary accent */
+      { x: 0.50, y: 0.82, r: 0.40, h: 143, s: 0.68, l: 0.04,  vx: 0.000132, vy: -0.000072 },
+      /* amber — corner accent */
+      { x: 0.88, y: 0.12, r: 0.36, h: 33,  s: 0.9,  l: 0.05,  vx: -0.00012, vy: 0.00015 },
     ];
   }
 
@@ -180,6 +183,14 @@ function initHeroGradient() {
     for (let y = 0; y < H; y += gridSize) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
+
+    /* Vignette — fade to dark at edges for depth */
+    const vig = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.72);
+    vig.addColorStop(0, 'transparent');
+    vig.addColorStop(1, 'rgba(5,8,16,0.5)');
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, W, H);
 
     t++;
     if (!prefersReduced) {
@@ -1164,210 +1175,229 @@ function initTileCanvases() {
    PROJECT SCREEN PREVIEWS  (live canvas instead of "coming soon")
    ═══════════════════════════════════════════════════════════════════ */
 function drawCATalystScreen(ctx, W, H, t) {
-  /* ── CATalyst Fix Mode — laptop 16:10 ── */
-  ctx.fillStyle = '#060810';
-  ctx.fillRect(0, 0, W, H);
-
-  const fs  = H / 220;
-  const px  = W * 0.05;
-  /* Phase: 0–5s → question visible, 5–9s → wrong answer revealed, 9–14s → insight */
-  const phase = ((t * 0.38) % (14 * 24)) / 24;
+  /* ── CATalyst Fix Mode — premium two-panel layout ── */
+  const fs = H / 200;
+  const phase = ((t * 0.4) % (12 * 24)) / 24;
   const revealed = phase >= 5;
 
-  /* ── Subtle ambient glow ── */
-  const amb = ctx.createRadialGradient(W * 0.5, 0, 0, W * 0.5, 0, H * 0.7);
-  amb.addColorStop(0, 'rgba(220,38,38,0.07)');
-  amb.addColorStop(1, 'transparent');
-  ctx.fillStyle = amb;
+  /* Background + red ambient glow top-left */
+  ctx.fillStyle = '#060912';
   ctx.fillRect(0, 0, W, H);
 
-  /* ── Header (0 → H*0.1) ── */
-  const hgrd = ctx.createLinearGradient(0, 0, W, 0);
-  hgrd.addColorStop(0, 'rgba(220,38,38,0.28)');
-  hgrd.addColorStop(1, 'rgba(180,20,20,0.04)');
-  ctx.fillStyle = hgrd;
-  ctx.fillRect(0, 0, W, H * 0.1);
+  /* Ambient red glow top */
+  const ambC = ctx.createRadialGradient(W * 0.32, 0, 0, W * 0.32, 0, H * 0.65);
+  ambC.addColorStop(0, 'rgba(220,38,38,0.05)');
+  ambC.addColorStop(1, 'transparent');
+  ctx.fillStyle = ambC;
+  ctx.fillRect(0, 0, W, H);
+
+  /* ── HEADER (0 → H*0.09) ── */
+  ctx.fillStyle = 'rgba(220,38,38,0.12)';
+  ctx.fillRect(0, 0, W, H * 0.09);
+  ctx.strokeStyle = 'rgba(220,38,38,0.2)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(0, H * 0.09); ctx.lineTo(W, H * 0.09); ctx.stroke();
+  ctx.textBaseline = 'middle';
 
   /* FIX MODE label */
   ctx.fillStyle = 'rgba(248,113,113,0.95)';
-  ctx.font = `bold ${fs * 10.5}px Inter, sans-serif`;
-  ctx.textBaseline = 'middle';
-  ctx.fillText('FIX MODE', px, H * 0.05);
+  ctx.font = `bold ${fs * 8.5}px JetBrains Mono, monospace`;
+  ctx.fillText('FIX MODE', W * 0.02, H * 0.045);
 
-  /* Timer — top right */
-  const timeLeft = Math.max(0, 90 - Math.floor(t * 0.012) % 90);
-  const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-  const ss = String(timeLeft % 60).padStart(2, '0');
-  ctx.fillStyle = timeLeft < 20 ? 'rgba(248,113,113,0.8)' : 'rgba(255,255,255,0.22)';
+  /* Progress dots — 12 total, 7 filled red */
+  const nDots = 12, nFilled = 7;
+  const dotCX = W * 0.5, dotY = H * 0.045;
+  const dotR = fs * 2.5, dotGap = fs * 7.5;
+  for (let i = 0; i < nDots; i++) {
+    const dx = dotCX + (i - (nDots - 1) / 2) * dotGap;
+    ctx.fillStyle = i < nFilled ? 'rgba(220,38,38,0.85)' : 'rgba(255,255,255,0.1)';
+    ctx.beginPath(); ctx.arc(dx, dotY, dotR, 0, Math.PI * 2); ctx.fill();
+  }
+
+  /* Timer — counts down using t */
+  const catTimeLeft = Math.max(0, 90 - Math.floor(t * 0.012) % 91);
+  const catMM = String(Math.floor(catTimeLeft / 60)).padStart(2, '0');
+  const catSS = String(catTimeLeft % 60).padStart(2, '0');
+  ctx.fillStyle = catTimeLeft < 20 ? 'rgba(248,113,113,0.9)' : 'rgba(255,255,255,0.55)';
   ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
   ctx.textAlign = 'right';
-  ctx.fillText(`${mm}:${ss}`, W - px, H * 0.036);
+  ctx.fillText(`${catMM}:${catSS}`, W * 0.98, H * 0.045);
   ctx.textAlign = 'left';
 
-  /* Session dots — top right */
-  for (let i = 0; i < 5; i++) {
-    ctx.fillStyle = i < 3 ? 'rgba(248,113,113,0.85)' : 'rgba(255,255,255,0.1)';
-    ctx.beginPath();
-    ctx.arc(W - px - (4 - i) * fs * 12, H * 0.073, fs * 3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.textBaseline = 'alphabetic';
+  /* ── PANELS ── */
+  const panelTop = H * 0.09;
+  const leftW = W * 0.64;
+  const rightX = leftW;
+  const rightW = W - rightX;
+  const lpad = W * 0.03;
 
-  /* ── Tag row (H*0.1 → H*0.148) ── */
-  const tagH = H * 0.04;
-  const tagY  = H * 0.108;
+  /* Panel divider */
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(leftW, panelTop); ctx.lineTo(leftW, H); ctx.stroke();
+
+  /* Right sidebar background */
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.fillRect(rightX, panelTop, rightW, H - panelTop);
+
+  /* ── LEFT PANEL — Tags ── */
+  const tagY2 = panelTop + H * 0.025;
+  const tagH2 = H * 0.037;
+  ctx.font = `${fs * 7}px JetBrains Mono, monospace`;
+  let tagX = lpad;
   [
-    { text: 'Quant · Permutations', bg: 'rgba(59,130,246,0.13)', color: 'rgba(147,197,253,0.82)' },
-    { text: 'Concept Gap',          bg: 'rgba(232,130,12,0.13)', color: 'rgba(232,170,80,0.82)'  },
-  ].reduce((x, tag) => {
-    ctx.font = `${fs * 8.8}px JetBrains Mono, monospace`;
+    { text: 'Quant', bg: 'rgba(59,130,246,0.14)', color: 'rgba(147,197,253,0.85)' },
+    { text: 'Permutations', bg: 'rgba(139,92,246,0.11)', color: 'rgba(196,181,253,0.78)' },
+  ].forEach(tag => {
     const tw = ctx.measureText(tag.text).width;
     ctx.fillStyle = tag.bg;
-    ctx.beginPath(); ctx.roundRect(x, tagY, tw + fs * 10, tagH, 3); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(tagX, tagY2, tw + fs * 10, tagH2, 3); ctx.fill();
     ctx.fillStyle = tag.color;
-    ctx.fillText(tag.text, x + fs * 5, tagY + tagH * 0.68);
-    return x + tw + fs * 16;
-  }, px);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tag.text, tagX + fs * 5, tagY2 + tagH2 / 2);
+    tagX += tw + fs * 16;
+  });
 
-  /* ── Question card (H*0.155 → dynamic bottom) ── */
-  const cardY = H * 0.155;
-  const qFont = `${fs * 9.8}px Inter, sans-serif`;
-  const qLineH = H * 0.04;
-  const qLines = [
-    'In how many ways can 3 boys and',
-    '3 girls sit in a row such that no',
-    'two girls are adjacent?',
-  ];
-  /* Calculate card height based on content */
-  const qBlockH  = qLines.length * qLineH;
-  const optH     = H * 0.058;
-  const optGap   = H * 0.007;
-  const optBlock = 4 * optH + 3 * optGap;
-  const cardPad  = H * 0.022;
-  const qNumH    = H * 0.032;
-  const gapQOpts = H * 0.018;
-  const cardH    = cardPad + qNumH + qBlockH + gapQOpts + optBlock + cardPad;
-
-  ctx.fillStyle = revealed ? 'rgba(220,38,38,0.04)' : 'rgba(255,255,255,0.02)';
-  ctx.strokeStyle = revealed ? 'rgba(248,113,113,0.18)' : 'rgba(255,255,255,0.055)';
-  ctx.lineWidth = 0.8;
-  ctx.beginPath(); ctx.roundRect(px, cardY, W - px * 2, cardH, 7); ctx.fill(); ctx.stroke();
-
-  /* Q number */
-  let cy = cardY + cardPad;
-  ctx.fillStyle = 'rgba(255,255,255,0.16)';
-  ctx.font = `${fs * 8}px JetBrains Mono, monospace`;
-  ctx.fillText('Q.07 · 3 marks', px + fs * 7, cy + qNumH * 0.8);
-  cy += qNumH;
-
-  /* Question text */
+  /* ── LEFT PANEL — Question text ── */
+  const qLineH = H * 0.038;
+  const qY0 = tagY2 + tagH2 + H * 0.022;
   ctx.fillStyle = 'rgba(233,229,220,0.82)';
-  ctx.font = qFont;
-  qLines.forEach(l => { ctx.fillText(l, px + fs * 7, cy + qLineH * 0.8); cy += qLineH; });
-  cy += gapQOpts;
+  ctx.font = `${fs * 8.8}px Inter, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ['In how many ways can 3 boys and', '3 girls sit in a row such that no', 'two girls are adjacent?'].forEach((line, i) => {
+    ctx.fillText(line, lpad, qY0 + i * qLineH);
+  });
 
-  /* Options */
-  const opts = [
-    { lbl: 'A', txt: '36'  },
-    { lbl: 'B', txt: '72',  correct: true },
+  /* ── LEFT PANEL — Options ── */
+  const optH = H * 0.068;
+  const optGap = H * 0.007;
+  const optY0 = qY0 + 3 * qLineH + H * 0.022;
+  const optW = leftW - lpad * 2;
+
+  [
+    { lbl: 'A', txt: '36' },
+    { lbl: 'B', txt: '72', correct: true },
     { lbl: 'C', txt: '144', wrong: true },
     { lbl: 'D', txt: '120' },
-  ];
-  opts.forEach(o => {
-    const selected = o.wrong && phase >= 4;
-    let bg = 'rgba(255,255,255,0.02)', border = 'rgba(255,255,255,0.05)', tc = 'rgba(233,229,220,0.48)';
-    if (selected)            { bg = 'rgba(220,38,38,0.13)';  border = 'rgba(248,113,113,0.38)'; tc = 'rgba(248,113,113,0.88)'; }
-    if (revealed && o.correct){ bg = 'rgba(34,197,94,0.08)'; border = 'rgba(74,222,128,0.38)';  tc = 'rgba(74,222,128,0.88)'; }
+  ].forEach((o, idx) => {
+    const oy = optY0 + idx * (optH + optGap);
+    const isW = o.wrong && revealed, isC = o.correct && revealed;
+    const bg = isW ? 'rgba(220,38,38,0.1)' : isC ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.02)';
+    const bd = isW ? 'rgba(248,113,113,0.3)' : isC ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.05)';
+    ctx.fillStyle = bg; ctx.strokeStyle = bd; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.roundRect(lpad, oy, optW, optH, 5); ctx.fill(); ctx.stroke();
 
-    ctx.fillStyle = bg; ctx.strokeStyle = border; ctx.lineWidth = 0.7;
-    ctx.beginPath(); ctx.roundRect(px + fs * 4, cy, W - px * 2 - fs * 8, optH, 5); ctx.fill(); ctx.stroke();
+    /* Circle with letter */
+    const cx = lpad + fs * 13, cy = oy + optH / 2;
+    ctx.fillStyle = isW ? 'rgba(248,113,113,0.8)' : isC ? 'rgba(74,222,128,0.8)' : 'rgba(255,255,255,0.08)';
+    ctx.beginPath(); ctx.arc(cx, cy, fs * 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = (isW || isC) ? '#060912' : 'rgba(255,255,255,0.35)';
+    ctx.font = `bold ${fs * 7.5}px Inter, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(o.lbl, cx, cy);
+    ctx.textAlign = 'left';
 
-    /* Circle label */
-    const cx2 = px + fs * 18, cy2 = cy + optH / 2;
-    ctx.fillStyle = selected ? 'rgba(248,113,113,0.8)' : (revealed && o.correct ? 'rgba(74,222,128,0.8)' : 'rgba(255,255,255,0.09)');
-    ctx.beginPath(); ctx.arc(cx2, cy2, fs * 6.5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = (selected || (revealed && o.correct)) ? '#060810' : 'rgba(255,255,255,0.35)';
-    ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
-    ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
-    ctx.fillText(o.lbl, cx2, cy2);
-    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    /* Answer value */
+    ctx.fillStyle = isW ? 'rgba(248,113,113,0.9)' : isC ? 'rgba(74,222,128,0.9)' : 'rgba(233,229,220,0.55)';
+    ctx.font = `${fs * 8.5}px Inter, sans-serif`;
+    ctx.fillText(o.txt, lpad + fs * 25, oy + optH / 2);
 
-    /* Answer text */
-    ctx.fillStyle = tc;
-    ctx.font = `${fs * 9.8}px Inter, sans-serif`;
-    ctx.textBaseline = 'middle';
-    ctx.fillText(o.txt, px + fs * 30, cy + optH / 2);
-
-    /* ✓ / ✗ */
-    if (revealed && (o.correct || o.wrong)) {
-      ctx.fillStyle = o.correct ? 'rgba(74,222,128,0.88)' : 'rgba(248,113,113,0.78)';
-      ctx.font = `bold ${fs * 10}px sans-serif`;
+    /* Status marker */
+    if (isC) {
+      ctx.fillStyle = 'rgba(74,222,128,0.85)';
+      ctx.font = `${fs * 7}px JetBrains Mono, monospace`;
       ctx.textAlign = 'right';
-      ctx.fillText(o.correct ? '✓' : '✗', W - px - fs * 10, cy + optH / 2);
+      ctx.fillText('✓ CORRECT', leftW - lpad, oy + optH / 2);
       ctx.textAlign = 'left';
     }
-    ctx.textBaseline = 'alphabetic';
-    cy += optH + optGap;
+    if (isW) {
+      ctx.fillStyle = 'rgba(248,113,113,0.75)';
+      ctx.font = `${fs * 6.5}px JetBrains Mono, monospace`;
+      ctx.textAlign = 'right';
+      ctx.fillText('✗ your answer', leftW - lpad, oy + optH / 2);
+      ctx.textAlign = 'left';
+    }
   });
-  cy += cardPad;
+  ctx.textBaseline = 'alphabetic';
 
-  /* ── Action bar (directly below card, H*0.07 tall) ── */
-  const abY = cy + H * 0.014;
-  const abH = H * 0.072;
-  const pulse = 0.78 + 0.22 * Math.sin(t * 0.09);
-  const halfW = (W - px * 2 - fs * 6) / 2;
+  /* ── LEFT PANEL — Action buttons ── */
+  const abY = optY0 + 4 * (optH + optGap) + H * 0.012;
+  const abH = H * 0.062;
+  const halfBW = (optW - fs * 5) / 2;
+  const catPulse = 0.8 + 0.2 * Math.sin(t * 0.09);
 
-  ctx.fillStyle = `rgba(220,38,38,${pulse * 0.92})`;
-  ctx.beginPath(); ctx.roundRect(px, abY, halfW, abH, abH / 2); ctx.fill();
+  ctx.fillStyle = `rgba(220,38,38,${catPulse * 0.88})`;
+  ctx.beginPath(); ctx.roundRect(lpad, abY, halfBW, abH, abH / 2); ctx.fill();
   ctx.fillStyle = '#fff';
-  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
+  ctx.font = `bold ${fs * 7.2}px Inter, sans-serif`;
   ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
-  ctx.fillText('−1 mark · Fix this now', px + halfW / 2, abY + abH / 2);
+  ctx.fillText('−1 mark · Fix this now', lpad + halfBW / 2, abY + abH / 2);
 
   ctx.fillStyle = 'rgba(255,255,255,0.04)';
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 0.6;
-  ctx.beginPath(); ctx.roundRect(px + halfW + fs * 6, abY, halfW, abH, abH / 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = `${fs * 9}px Inter, sans-serif`;
-  ctx.fillText('Next question →', px + halfW * 1.5 + fs * 6, abY + abH / 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 0.6;
+  ctx.beginPath(); ctx.roundRect(lpad + halfBW + fs * 5, abY, halfBW, abH, abH / 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.32)';
+  ctx.font = `${fs * 7.2}px Inter, sans-serif`;
+  ctx.fillText('Next →', lpad + halfBW + fs * 5 + halfBW / 2, abY + abH / 2);
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
 
-  /* ── Insight strip — ALWAYS visible, fades in ── */
-  const iy = abY + abH + H * 0.018;
-  const insightAlpha = phase >= 9 ? Math.min(1, (phase - 9) / 2) : 0.3;
-  ctx.globalAlpha = insightAlpha;
+  /* ── RIGHT SIDEBAR ── */
+  const spad = rightX + rightW * 0.1;
+  const sY = panelTop + H * 0.04;
 
-  ctx.fillStyle = 'rgba(255,255,255,0.015)';
-  ctx.fillRect(0, iy, W, H - iy);
+  /* THIS SESSION eyebrow */
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = `${fs * 6}px JetBrains Mono, monospace`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText('THIS SESSION', spad, sY);
 
-  /* Top label row */
-  ctx.fillStyle = 'rgba(248,113,113,0.72)';
-  ctx.font = `bold ${fs * 8.5}px JetBrains Mono, monospace`;
-  ctx.fillText('Error pattern: 3× this week', px, iy + H * 0.042);
-  ctx.fillStyle = 'rgba(255,255,255,0.18)';
-  ctx.font = `${fs * 7.8}px JetBrains Mono, monospace`;
-  ctx.textAlign = 'right';
-  ctx.fillText('Permutations', W - px, iy + H * 0.042);
+  /* Score card */
+  const scoreY = sY + H * 0.03;
+  const scoreH = H * 0.15;
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.roundRect(rightX + rightW * 0.08, scoreY, rightW * 0.84, scoreH, 6); ctx.fill(); ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = `bold ${fs * 20}px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('3/6', rightX + rightW / 2, scoreY + scoreH * 0.52);
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `${fs * 7}px Inter, sans-serif`;
+  ctx.fillText('correct', rightX + rightW / 2, scoreY + scoreH * 0.84);
   ctx.textAlign = 'left';
 
-  /* Bar chart */
-  const bars = [0.45, 0.72, 0.38, 0.85, 0.55, 0.9, 0.6];
-  const chartH  = H - iy - H * 0.08;
-  const chartY  = iy + H * 0.06;
-  const bW      = (W - px * 2) / bars.length - fs * 3;
-  bars.forEach((bh, i) => {
-    const bx  = px + i * ((W - px * 2) / bars.length);
-    const bHH = chartH * bh;
-    const by  = chartY + chartH - bHH;
-    ctx.fillStyle = `rgba(248,113,113,${0.22 + 0.5 * bh})`;
-    ctx.beginPath(); ctx.roundRect(bx, by, bW, bHH, [2, 2, 0, 0]); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.18)';
-    ctx.font = `${fs * 7}px JetBrains Mono, monospace`;
-    ctx.textAlign = 'center';
-    ctx.fillText(['M','T','W','T','F','S','S'][i], bx + bW / 2, chartY + chartH + H * 0.032);
+  /* Divider */
+  const divY = scoreY + scoreH + H * 0.02;
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(rightX + rightW * 0.08, divY); ctx.lineTo(rightX + rightW * 0.92, divY); ctx.stroke();
+
+  /* WEAK TOPIC section */
+  const weakY = divY + H * 0.022;
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = `${fs * 6}px JetBrains Mono, monospace`;
+  ctx.fillText('WEAK TOPIC', spad, weakY);
+  ctx.fillStyle = 'rgba(251,191,36,0.9)';
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.fillText('Permutations', spad, weakY + H * 0.042);
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  ctx.font = `${fs * 7}px Inter, sans-serif`;
+  ctx.fillText('3 errors this week', spad, weakY + H * 0.072);
+
+  /* Mini red sparkline bars */
+  const sparkY = weakY + H * 0.092;
+  const sparkCount = 5;
+  const sparkBW = (rightW * 0.84 - fs * 5) / sparkCount - fs * 2;
+  const sparkMaxH = H * 0.1;
+  [0.38, 0.65, 0.28, 0.82, 0.5].forEach((bh, i) => {
+    const anim = bh * (0.85 + 0.15 * Math.sin(t * 0.06 + i));
+    const bx = rightX + rightW * 0.08 + i * (sparkBW + fs * 2) + fs;
+    const bH = sparkMaxH * anim;
+    ctx.fillStyle = `rgba(220,38,38,${0.25 + 0.55 * anim})`;
+    ctx.beginPath(); ctx.roundRect(bx, sparkY + sparkMaxH - bH, sparkBW, bH, [2, 2, 0, 0]); ctx.fill();
   });
-  ctx.textAlign = 'left';
-  ctx.globalAlpha = 1;
+
+  ctx.textBaseline = 'alphabetic';
 }
 
 function drawGharKhataScreen(ctx, W, H, t) {
@@ -1714,49 +1744,59 @@ function drawPitchReadyScreen(ctx, W, H, t) {
 }
 
 function drawPostroomScreen(ctx, W, H, t) {
-  /* ── Postroom Studio — design tool, laptop 16:10 ── */
-  ctx.fillStyle = '#050710';
+  /* ── Postroom Studio — Figma-quality design tool, laptop 16:10 ── */
+  ctx.fillStyle = '#07080f';
   ctx.fillRect(0, 0, W, H);
 
   const fs  = H / 220;
-  const tbH = H * 0.1;   /* toolbar height */
-  const sw  = W * 0.18;  /* left layers panel */
-  const rw  = W * 0.19;  /* right properties panel */
+  const tbH = H * 0.08;  /* toolbar height */
+  const sw  = W * 0.16;  /* left layers panel */
+  const rw  = W * 0.17;  /* right properties panel */
   const cw  = W - sw - rw;
 
   const selLayer = Math.floor((t * 0.005) % 5);
 
   /* ── Toolbar ── */
-  ctx.fillStyle = '#080a17';
+  ctx.fillStyle = '#07080f';
   ctx.fillRect(0, 0, W, tbH);
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
   ctx.lineWidth = 0.5;
   ctx.beginPath(); ctx.moveTo(0, tbH); ctx.lineTo(W, tbH); ctx.stroke();
 
-  /* Logo */
+  /* Logo — left */
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(232,130,12,0.92)';
-  ctx.font = `bold ${fs * 10.5}px Inter, sans-serif`;
-  ctx.fillText('Postroom', fs * 9, tbH / 2);
+  ctx.font = `bold ${fs * 10}px Inter, sans-serif`;
+  ctx.fillText('Postroom', fs * 7, tbH / 2);
 
-  /* Menu: spaced evenly in centre */
-  const menuItems = ['File', 'Edit', 'View', 'Insert'];
-  const menuStartX = sw + fs * 8;
-  const menuSpacing = cw * 0.16;
-  menuItems.forEach((item, i) => {
-    ctx.fillStyle = 'rgba(255,255,255,0.28)';
-    ctx.font = `${fs * 9}px Inter, sans-serif`;
-    ctx.fillText(item, menuStartX + i * menuSpacing, tbH / 2);
+  /* Tool icons — centered in toolbar */
+  const toolIcons = ['↖', 'T', '□', '⊡', '◉'];
+  const toolSpacing = fs * 14;
+  const toolsW = toolIcons.length * toolSpacing;
+  const toolStartX = (W - toolsW) / 2 - toolSpacing / 2;
+  toolIcons.forEach((icon, i) => {
+    const tx = toolStartX + i * toolSpacing;
+    const isSel = i === 0;
+    if (isSel) {
+      ctx.fillStyle = 'rgba(46,91,255,0.18)';
+      ctx.beginPath(); ctx.roundRect(tx - fs * 3.5, tbH * 0.12, fs * 11, tbH * 0.76, 3); ctx.fill();
+    }
+    ctx.fillStyle = isSel ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.3)';
+    ctx.font = `${fs * 9}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(icon, tx + fs * 2, tbH / 2);
   });
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
 
-  /* Zoom pill */
-  const zoomX = W - rw - fs * 68;
-  ctx.fillStyle = 'rgba(255,255,255,0.05)';
-  ctx.beginPath(); ctx.roundRect(zoomX, tbH * 0.2, fs * 22, tbH * 0.6, 3); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = `${fs * 8.5}px JetBrains Mono, monospace`;
+  /* Share button */
+  const shareX = W - rw - fs * 84;
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.roundRect(shareX, tbH * 0.18, fs * 34, tbH * 0.64, 4); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = `${fs * 8.5}px Inter, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('100%', zoomX + fs * 11, tbH / 2);
+  ctx.fillText('Share', shareX + fs * 17, tbH / 2);
   ctx.textAlign = 'left';
 
   /* Publish button */
@@ -1764,9 +1804,9 @@ function drawPostroomScreen(ctx, W, H, t) {
   ctx.fillStyle = 'rgba(74,222,128,0.88)';
   ctx.beginPath(); ctx.roundRect(pubX, tbH * 0.18, fs * 38, tbH * 0.64, 4); ctx.fill();
   ctx.fillStyle = 'rgba(5,46,22,0.9)';
-  ctx.font = `bold ${fs * 9}px Inter, sans-serif`;
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('↑ Publish', pubX + fs * 19, tbH / 2);
+  ctx.fillText('Publish', pubX + fs * 19, tbH / 2);
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
 
@@ -1890,7 +1930,7 @@ function drawPostroomScreen(ctx, W, H, t) {
     ctx.fill();
   });
 
-  /* CTA */
+  /* CTA button */
   const ctaY = hlY + fs * 54;
   const ctaG = ctx.createLinearGradient(pgX + pgW * 0.06, 0, pgX + pgW * 0.3, 0);
   ctaG.addColorStop(0, 'rgba(232,220,192,0.92)');
@@ -1903,17 +1943,40 @@ function drawPostroomScreen(ctx, W, H, t) {
   ctx.fillText('See our work →', pgX + pgW * 0.06 + pgW * 0.11, ctaY + fs * 8);
   ctx.textAlign = 'left';
 
-  /* Blue selection border around headline block */
-  const selX = pgX + pgW * 0.04, selY2 = hlY - fs * 3;
-  const selW2 = pgW * 0.58, selH2 = fs * 46;
-  ctx.strokeStyle = '#2E5BFF';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(selX, selY2, selW2, selH2);
+  /* Hero image placeholder — gradient rect below CTA */
+  const imgY = ctaY + fs * 22;
+  const imgH = pgH * 0.28;
+  const imgG = ctx.createLinearGradient(pgX + pgW * 0.06, imgY, pgX + pgW * 0.94, imgY + imgH);
+  imgG.addColorStop(0, 'rgba(46,91,255,0.1)');
+  imgG.addColorStop(0.5, 'rgba(232,130,12,0.06)');
+  imgG.addColorStop(1, 'rgba(74,222,128,0.05)');
+  ctx.fillStyle = imgG;
+  ctx.beginPath(); ctx.roundRect(pgX + pgW * 0.06, imgY, pgW * 0.88, imgH, 4); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.roundRect(pgX + pgW * 0.06, imgY, pgW * 0.88, imgH, 4); ctx.stroke();
+  /* Placeholder label */
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.font = `${fs * 7.5}px Inter, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('hero image', pgX + pgW * 0.5, imgY + imgH / 2);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+  /* Blue selection border around headline — cycles through layers */
+  const selTargets = [
+    { x: pgX + pgW * 0.04, y: hlY - fs * 3,         w: pgW * 0.58, h: fs * 46 },  /* headline */
+    { x: pgX + pgW * 0.04, y: hlY + fs * 28,        w: pgW * 0.42, h: fs * 15 },  /* subcopy */
+    { x: pgX + pgW * 0.04, y: ctaY,                  w: pgW * 0.22, h: fs * 15 },  /* CTA */
+    { x: pgX + pgW * 0.06, y: imgY,                  w: pgW * 0.88, h: imgH },     /* hero image */
+    { x: pgX,              y: pcY,                   w: pgW,        h: pgH * 0.07 }, /* nav */
+  ];
+  const selT = selTargets[selLayer];
+  ctx.strokeStyle = '#2E5BFF'; ctx.lineWidth = 1;
+  ctx.strokeRect(selT.x, selT.y, selT.w, selT.h);
   [[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]].forEach(([hx, hy]) => {
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#2E5BFF'; ctx.lineWidth = 0.8;
-    ctx.fillRect(selX + selW2 * hx - fs * 2.5, selY2 + selH2 * hy - fs * 2.5, fs * 5, fs * 5);
-    ctx.strokeRect(selX + selW2 * hx - fs * 2.5, selY2 + selH2 * hy - fs * 2.5, fs * 5, fs * 5);
+    ctx.fillRect(selT.x + selT.w * hx - fs * 2.5, selT.y + selT.h * hy - fs * 2.5, fs * 5, fs * 5);
+    ctx.strokeRect(selT.x + selT.w * hx - fs * 2.5, selT.y + selT.h * hy - fs * 2.5, fs * 5, fs * 5);
   });
 
   /* ── Right properties panel ── */
@@ -2209,6 +2272,7 @@ function initCursor() {
   document.body.style.cursor = 'none';
 
   let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+  let projectColor = ''; /* tracks current project section color */
 
   document.addEventListener('mousemove', e => {
     mouseX = e.clientX; mouseY = e.clientY;
@@ -2230,7 +2294,11 @@ function initCursor() {
 
   document.addEventListener('mouseover', e => {
     const target = e.target.closest('a, button, [role="button"]');
-    if (!target) { ring.className = 'cursor-ring'; return; }
+    if (!target) {
+      ring.className = 'cursor-ring';
+      ring.style.borderColor = projectColor;
+      return;
+    }
 
     const isWA = target.classList.contains('btn-whatsapp')
               || target.classList.contains('btn-primary')
@@ -2239,15 +2307,45 @@ function initCursor() {
               || target.classList.contains('btn-submit');
 
     ring.className = isWA ? 'cursor-ring hover-whatsapp' : 'cursor-ring hover-link';
+    ring.style.borderColor = ''; /* let hover class handle it */
   });
 
   document.addEventListener('mouseout', e => {
     if (!e.target.closest('a, button')) return;
     ring.className = 'cursor-ring';
+    ring.style.borderColor = projectColor; /* restore project color */
   });
 
   document.addEventListener('mouseleave', () => { dot.style.opacity = 0; ring.style.opacity = 0; });
   document.addEventListener('mouseenter', () => { dot.style.opacity = 1; ring.style.opacity = 1; });
+
+  /* Project section color tracking */
+  const projectColors = {
+    catalyst:  '#2E5BFF',
+    gharkhata: '#00C853',
+    pitchready:'#FF8F00',
+    postroom:  '#E8DCC0',
+  };
+  const projObs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        projectColor = projectColors[entry.target.dataset.project] || '';
+        if (!ring.className.includes('hover-')) ring.style.borderColor = projectColor;
+      }
+    });
+  }, { threshold: 0.4 });
+  document.querySelectorAll('.section-project').forEach(s => projObs.observe(s));
+
+  /* Reset color when leaving the projects container */
+  const projContainer = document.getElementById('projects');
+  if (projContainer) {
+    new IntersectionObserver(entries => {
+      if (!entries[0].isIntersecting) {
+        projectColor = '';
+        if (!ring.className.includes('hover-')) ring.style.borderColor = '';
+      }
+    }, { threshold: 0.05 }).observe(projContainer);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2614,9 +2712,19 @@ function initIntroLoader() {
 function initScrollProgress() {
   const bar = document.getElementById('scroll-progress');
   if (!bar) return;
+
+  /* Back-to-top button — morphs in at 85% scroll */
+  const btt = document.createElement('button');
+  btt.id = 'back-to-top';
+  btt.textContent = '↑ Top';
+  btt.setAttribute('aria-label', 'Back to top');
+  document.body.appendChild(btt);
+  btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
   window.addEventListener('scroll', () => {
     const pct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
-    bar.style.transform = 'scaleX(' + Math.min(pct, 1) + ')';
+    bar.style.transform = `scaleX(${Math.min(pct, 1)})`;
+    btt.classList.toggle('visible', pct > 0.85);
   }, { passive: true });
 }
 
@@ -2806,6 +2914,169 @@ function initFaviconAnimation() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   MAGNETIC CTA BUTTONS  (Idea 1)
+   ═══════════════════════════════════════════════════════════════════ */
+function initMagneticButtons() {
+  const isMobile = window.matchMedia('(max-width: 1023px)').matches
+                || window.matchMedia('(pointer: coarse)').matches;
+  if (isMobile) return;
+
+  document.querySelectorAll('.btn-primary, .btn-whatsapp, .btn-final-wa, [data-magnetic]').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      const r = el.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width  / 2)) * 0.28;
+      const dy = (e.clientY - (r.top  + r.height / 2)) * 0.28;
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    });
+    el.addEventListener('mouseenter', () => {
+      el.style.transition = 'transform 0.1s ease';
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transition = 'transform 0.5s cubic-bezier(0.16,1,0.3,1)';
+      el.style.transform  = 'translate(0,0)';
+      setTimeout(() => { el.style.transition = ''; }, 500);
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DEVICE FRAME 3D TILT  (Idea 2)
+   ═══════════════════════════════════════════════════════════════════ */
+function initDeviceTilt() {
+  const isMobile = window.SceneState?.isMobile
+                || window.matchMedia('(max-width: 1023px)').matches
+                || window.matchMedia('(pointer: coarse)').matches;
+  if (isMobile) return;
+
+  document.querySelectorAll('.device-laptop-frame, .device-phone-frame').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width  - 0.5;
+      const y = (e.clientY - r.top)  / r.height - 0.5;
+      el.style.transform  = `perspective(600px) rotateY(${x * 12}deg) rotateX(${-y * 8}deg) scale(1.02)`;
+      el.style.transition = 'transform 0.1s ease';
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transform  = 'perspective(600px) rotateY(0) rotateX(0) scale(1)';
+      el.style.transition = 'transform 0.6s cubic-bezier(0.16,1,0.3,1)';
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   VISITOR SIGNAL  (Idea 3)
+   ═══════════════════════════════════════════════════════════════════ */
+function initVisitorSignal() {
+  const el = document.getElementById('visitor-count');
+  if (!el) return;
+  /* Seed from day-of-week so it changes daily but not on each reload */
+  const base = 38 + (new Date().getDay() * 7) % 24;
+  el.textContent = base;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GITHUB TICKER  (Idea 6)
+   ═══════════════════════════════════════════════════════════════════ */
+function initHeroTicker() {
+  const textEl = document.querySelector('.ticker-text');
+  if (!textEl) return;
+  fetch('https://api.github.com/users/PoisonOps/events?per_page=10')
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data || !data.length) return;
+      const push = data.find(e => e.type === 'PushEvent');
+      if (!push) return;
+      const ms    = Date.now() - new Date(push.created_at).getTime();
+      const hours = Math.floor(ms / 3600000);
+      const label = hours < 1  ? 'just now'
+                  : hours < 24 ? `${hours}h ago`
+                  : `${Math.floor(hours / 24)}d ago`;
+      textEl.innerHTML = `Currently: shipping CATalyst v2 · <span class="ticker-age">last commit ${label}</span>`;
+    })
+    .catch(() => {}); /* fail silently — static fallback text already shown */
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS  (Idea 7)
+   ═══════════════════════════════════════════════════════════════════ */
+function initKeyboardShortcuts() {
+  const isMobile = window.matchMedia('(max-width: 1023px)').matches;
+  if (isMobile) return;
+
+  const hint = document.createElement('div');
+  hint.id = 'kbd-hint';
+  hint.innerHTML = '<span class="kbd">?</span> shortcuts';
+  document.body.appendChild(hint);
+
+  const panel = document.createElement('div');
+  panel.id = 'kbd-panel';
+  panel.className = 'hidden';
+  panel.innerHTML =
+    '<div class="kbd-title">Keyboard shortcuts</div>' +
+    '<div class="kbd-row"><kbd>W</kbd><span>Open WhatsApp</span></div>' +
+    '<div class="kbd-row"><kbd>P</kbd><span>Jump to projects</span></div>' +
+    '<div class="kbd-row"><kbd>S</kbd><span>Jump to services</span></div>' +
+    '<div class="kbd-row"><kbd>I</kbd><span>Jump to idea form</span></div>' +
+    '<div class="kbd-row"><kbd>?</kbd><span>Toggle this panel</span></div>' +
+    '<div class="kbd-row"><kbd>Esc</kbd><span>Close panel</span></div>';
+  document.body.appendChild(panel);
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    switch (e.key.toLowerCase()) {
+      case 'w':      window.open(WA_URL, '_blank'); break;
+      case 'p':      document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' }); break;
+      case 's':      document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); break;
+      case 'i':      document.getElementById('idea-form')?.scrollIntoView({ behavior: 'smooth' }); break;
+      case '?':      panel.classList.toggle('hidden'); break;
+      case 'escape': panel.classList.add('hidden'); break;
+    }
+  });
+
+  hint.addEventListener('click', () => panel.classList.toggle('hidden'));
+  document.addEventListener('click', e => {
+    if (!panel.contains(e.target) && e.target !== hint) panel.classList.add('hidden');
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   AVAILABILITY NUDGE BAR  (Idea 8)
+   ═══════════════════════════════════════════════════════════════════ */
+function initAvailabilityNudge() {
+  if (sessionStorage.getItem('nudge_dismissed')) return;
+
+  const bar = document.createElement('div');
+  bar.id = 'avail-nudge';
+  bar.innerHTML =
+    `<span>Sahil has <strong>1 open project slot</strong> this month.</span>` +
+    `<a href="${WA_URL}" target="_blank" rel="noopener" class="nudge-cta">Start a conversation →</a>` +
+    `<button class="nudge-close" aria-label="Dismiss">✕</button>`;
+  document.body.appendChild(bar);
+
+  let shown = false;
+  function show() {
+    if (shown) return;
+    shown = true;
+    bar.classList.add('visible');
+  }
+
+  const tid = setTimeout(show, 45000);
+
+  function onScroll() {
+    const pct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+    if (pct >= 0.5) { show(); window.removeEventListener('scroll', onScroll); }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  bar.querySelector('.nudge-close').addEventListener('click', () => {
+    bar.classList.remove('visible');
+    sessionStorage.setItem('nudge_dismissed', '1');
+    clearTimeout(tid);
+    window.removeEventListener('scroll', onScroll);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════════════ */
 function boot() {
@@ -2830,6 +3101,13 @@ function boot() {
   initFastDemo();
   initCopyEmail();
   initFaviconAnimation();
+  /* New enhancements */
+  initMagneticButtons();
+  initDeviceTilt();
+  initVisitorSignal();
+  initHeroTicker();
+  initKeyboardShortcuts();
+  initAvailabilityNudge();
 }
 
 if (document.readyState === 'loading') {

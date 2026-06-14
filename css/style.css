@@ -262,7 +262,7 @@ section { position: relative; }
   pointer-events: none;
   z-index: 9998;
   transform: translate(-50%, -50%);
-  transition: width 0.25s, height 0.25s, border-color 0.25s, background 0.25s;
+  transition: width 0.25s, height 0.25s, border-color 0.5s ease, background 0.25s;
 }
 
 .cursor-ring.hover-link     { width: 44px; height: 44px; border-color: var(--accent); }
@@ -1640,3 +1640,105 @@ section { position: relative; }
   opacity: 0; transition: all 0.3s; z-index: 1000; pointer-events: none;
 }
 #toast.toast-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============================================================
+   HERO SOCIAL SIGNAL
+   ============================================================ */
+.hero-social-signal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; color: var(--text-dim);
+  margin-top: 8px; opacity: 0.65;
+  display: flex; align-items: center; gap: 6px;
+}
+.signal-dot { color: #4ADE80; font-size: 0.5rem; }
+
+/* ============================================================
+   FILM GRAIN OVERLAY
+   ============================================================ */
+.grain-overlay {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: 1; pointer-events: none; opacity: 0.032;
+}
+@media (prefers-reduced-motion: reduce) { .grain-overlay { display: none; } }
+
+/* ============================================================
+   KEYBOARD SHORTCUTS PANEL
+   ============================================================ */
+#kbd-hint {
+  position: fixed; bottom: 80px; right: 24px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  color: var(--text-dim); opacity: 0.45; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  z-index: 100; transition: opacity 0.2s;
+}
+#kbd-hint:hover { opacity: 0.8; }
+#kbd-hint .kbd {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px; padding: 2px 6px; font-size: 0.7rem;
+}
+#kbd-panel {
+  position: fixed; bottom: 110px; right: 24px;
+  background: #0C0F1E; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 16px 20px; z-index: 300;
+  min-width: 220px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.kbd-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px;
+}
+.kbd-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; font-size: 0.85rem; color: var(--text-dim);
+}
+.kbd-row kbd {
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px; padding: 2px 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  color: var(--text); min-width: 24px; text-align: center;
+}
+@media (max-width: 1023px) { #kbd-hint, #kbd-panel { display: none; } }
+
+/* ============================================================
+   AVAILABILITY NUDGE BAR
+   ============================================================ */
+#avail-nudge {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
+  background: rgba(10,8,14,0.96); border-top: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px clamp(24px, 5vw, 48px);
+  font-size: 0.9rem; color: var(--text-dim);
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+#avail-nudge.visible { transform: translateY(0); }
+#avail-nudge strong { color: var(--text); }
+.nudge-cta {
+  margin-left: auto; white-space: nowrap;
+  background: var(--whatsapp); color: #fff;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700;
+  padding: 8px 16px; border-radius: 6px; text-decoration: none;
+  transition: filter 0.2s;
+}
+.nudge-cta:hover { filter: brightness(1.1); }
+.nudge-close {
+  background: none; border: none; color: var(--text-dim);
+  font-size: 0.9rem; cursor: pointer; padding: 4px 8px;
+  opacity: 0.5; transition: opacity 0.2s;
+}
+.nudge-close:hover { opacity: 1; }
+
+/* ============================================================
+   BACK TO TOP BUTTON
+   ============================================================ */
+#back-to-top {
+  position: fixed; bottom: 24px; left: 24px; z-index: 100;
+  background: var(--surface); border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim); font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem; padding: 8px 14px; border-radius: 20px;
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+#back-to-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+#back-to-top:hover { background: rgba(255,255,255,0.06); color: var(--text); }
