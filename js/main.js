@@ -2,7 +2,7 @@
 'use strict';
 
 /* ── Constants ───────────────────────────────────────────────────── */
-const POSTROOM_URL = 'FILL_ME_IN'; /* Sahil: replace with your Postroom Vercel URL */
+const POSTROOM_URL = 'https://postroom-studio.vercel.app/';
 
 const WA_URL = 'https://wa.me/917080442040?text=Hi%20Sahil%2C%20I%20saw%20your%20portfolio%20and%20want%20to%20discuss%20a%20project.';
 
@@ -72,7 +72,7 @@ const CASE_STUDIES = {
     ],
     stack: ['React', 'Fabric.js', 'Tailwind', 'Vercel'],
     honesty: 'The "publish" feature is mostly UI — the actual content delivery pipeline wasn\'t built. I should have validated whether creators wanted the tool before building the full editor.',
-    live: 'FILL_ME_IN',
+    live: 'https://postroom-studio.vercel.app/',
     github: 'https://github.com/PoisonOps',
   },
 };
