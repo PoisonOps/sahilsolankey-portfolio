@@ -391,6 +391,8 @@ section { position: relative; }
   overflow: hidden;
   aspect-ratio: 16/10;
   position: relative;
+  isolation: isolate;
+  transform: translateZ(0);
 }
 
 .laptop-screen-glow {

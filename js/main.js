@@ -2022,10 +2022,10 @@ function initProjectPreviews() {
   const configs = [
     { id: 'preview-hero-laptop', draw: drawCATalystScreen },
     { id: 'preview-hero-phone',  draw: drawGharKhataScreen },
-    { id: 'preview-catalyst',    draw: drawCATalystScreen },
+    /* preview-catalyst replaced by <video catalyst.mp4> */
     { id: 'preview-gharkhata',   draw: drawGharKhataScreen },
     { id: 'preview-pitchready',  draw: drawPitchReadyScreen },
-    { id: 'preview-postroom',    draw: drawPostroomScreen },
+    /* preview-postroom replaced by <video postroom.mp4> */
   ];
 
   const dpr = Math.min(window.devicePixelRatio, 2);

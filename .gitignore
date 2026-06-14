@@ -1,1 +1,5 @@
 .vercel
+assets/videos/*.mp4
+assets/videos/*.webm
+assets/.DS_Store
+assets/videos/.DS_Store
