@@ -59,7 +59,7 @@ const CASE_STUDIES = {
     github: 'https://github.com/PoisonOps',
   },
   pitchready: {
-    eyebrow: 'Project 04 · Sports Analytics',
+    eyebrow: 'Project 05 · Sports Analytics',
     title: 'PitchReady',
     tagline: 'Cricket performance tracking for club players.',
     color: '#FF8F00',
@@ -76,7 +76,7 @@ const CASE_STUDIES = {
     github: 'https://github.com/PoisonOps',
   },
   postroom: {
-    eyebrow: 'Project 05 · Design Tool',
+    eyebrow: 'Project 06 · Design Tool',
     title: 'Postroom',
     tagline: 'Visual storytelling studio for content creators.',
     color: '#E8DCC0',
@@ -93,7 +93,7 @@ const CASE_STUDIES = {
     github: 'https://github.com/PoisonOps',
   },
   pageautopsy: {
-    eyebrow: 'Project 06 · AI Tool',
+    eyebrow: 'Project 04 · AI Tool',
     title: 'PageAutopsy',
     tagline: 'Brutal AI audit of any landing page. Free. 20 seconds.',
     color: '#FF4D00',
