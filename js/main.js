@@ -24,8 +24,25 @@ const CASE_STUDIES = {
     live: 'https://catalyst-app-six.vercel.app',
     github: 'https://github.com/PoisonOps',
   },
+  unscripted: {
+    eyebrow: 'Project 02 · AI Interview Platform',
+    title: 'Unscripted',
+    tagline: 'Voice-first AI mock interviews. Speak, get questioned, get scored.',
+    color: '#F5A623',
+    problem: 'Mock interviews are either solo (no pressure) or expensive (human coaches). There\'s no middle ground that\'s free, always available, and actually challenges you like a real interviewer would.',
+    solution: 'Built a full voice interview loop: a named AI persona asks questions in character via TTS, Web Speech API captures your answer, Gemini generates the next question, and a scored breakdown is produced at the end. 6 interview categories, Gemini + Groq fallback.',
+    metrics: [
+      { val: '6', label: 'Interview categories' },
+      { val: '12', label: 'Questions per session' },
+      { val: '2', label: 'AI providers (fallback)' },
+    ],
+    stack: ['Vanilla JS', 'Web Speech API', 'Supabase', 'Vercel Functions', 'Gemini 2.0 Flash', 'Groq LLaMA 70B'],
+    honesty: 'TTS voice quality is limited by browser-native speech synthesis — sounds robotic on some devices. V2 will replace it with Cartesia TTS and Whisper transcription for production-grade voice quality.',
+    live: 'https://unscripted-gold.vercel.app',
+    github: 'https://github.com/PoisonOps/Unscripted',
+  },
   gharkhata: {
-    eyebrow: 'Project 02 · Fintech PWA',
+    eyebrow: 'Project 03 · Fintech PWA',
     title: 'GharKhata',
     tagline: 'Shared expense tracking for couples. Works offline.',
     color: '#00C853',
@@ -42,7 +59,7 @@ const CASE_STUDIES = {
     github: 'https://github.com/PoisonOps',
   },
   pitchready: {
-    eyebrow: 'Project 03 · Sports Analytics',
+    eyebrow: 'Project 04 · Sports Analytics',
     title: 'PitchReady',
     tagline: 'Cricket performance tracking for club players.',
     color: '#FF8F00',
@@ -59,7 +76,7 @@ const CASE_STUDIES = {
     github: 'https://github.com/PoisonOps',
   },
   postroom: {
-    eyebrow: 'Project 04 · Design Tool',
+    eyebrow: 'Project 05 · Design Tool',
     title: 'Postroom',
     tagline: 'Visual storytelling studio for content creators.',
     color: '#E8DCC0',
@@ -76,7 +93,7 @@ const CASE_STUDIES = {
     github: 'https://github.com/PoisonOps',
   },
   pageautopsy: {
-    eyebrow: 'Project 05 · AI Tool',
+    eyebrow: 'Project 06 · AI Tool',
     title: 'PageAutopsy',
     tagline: 'Brutal AI audit of any landing page. Free. 20 seconds.',
     color: '#FF4D00',
@@ -96,6 +113,7 @@ const CASE_STUDIES = {
 
 const MARQUEE_ITEMS = [
   '● CATalyst — live with paying users',
+  '● Unscripted — AI voice interview platform, shipped',
   '● GharKhata shipped in 2 days',
   '● PitchReady shipped in 1 day',
   '● Postroom Studio — designed & shipped',
@@ -2036,6 +2054,159 @@ function drawPostroomScreen(ctx, W, H, t) {
   ctx.textBaseline = 'alphabetic';
 }
 
+function drawUnscriptedScreen(ctx, W, H, t) {
+  /* ── Unscripted — Interview Room, laptop 16:10 ── */
+  ctx.fillStyle = '#0D0A09';
+  ctx.fillRect(0, 0, W, H);
+
+  const fs  = H / 300;
+  const acc = '#F5A623';
+
+  /* Ambient amber glow */
+  const amb = ctx.createRadialGradient(W * 0.5, H * 0.25, 0, W * 0.5, H * 0.25, H * 0.75);
+  amb.addColorStop(0, 'rgba(245,166,35,0.06)');
+  amb.addColorStop(1, 'transparent');
+  ctx.fillStyle = amb;
+  ctx.fillRect(0, 0, W, H);
+
+  /* ── Nav bar ── */
+  ctx.fillStyle = 'rgba(10,8,7,0.96)';
+  ctx.fillRect(0, 0, W, H * 0.11);
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(0, H * 0.11); ctx.lineTo(W, H * 0.11); ctx.stroke();
+
+  /* Logo */
+  ctx.fillStyle = '#F2EDE4';
+  ctx.font = `bold ${fs * 11}px Inter, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Unscripted', W * 0.04, H * 0.055);
+  ctx.fillStyle = acc;
+  ctx.fillText('.', W * 0.04 + fs * 68, H * 0.055);
+
+  /* Timer */
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = `${fs * 9}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText('08:24', W - W * 0.04, H * 0.055);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  /* ── Interviewer card (left) ── */
+  const cardX = W * 0.04;
+  const cardY = H * 0.15;
+  const cardW = W * 0.25;
+  const cardH = H * 0.32;
+
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.beginPath(); ctx.roundRect(cardX, cardY, cardW, cardH, 5); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.roundRect(cardX, cardY, cardW, cardH, 5); ctx.stroke();
+
+  /* Avatar */
+  const avR = cardH * 0.19;
+  const avX = cardX + cardW * 0.5;
+  const avY = cardY + cardH * 0.3;
+  ctx.fillStyle = 'rgba(245,166,35,0.13)';
+  ctx.beginPath(); ctx.arc(avX, avY, avR, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(245,166,35,0.28)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(avX, avY, avR, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = acc;
+  ctx.font = `bold ${fs * 13}px Inter, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('AB', avX, avY);
+
+  /* Name & title */
+  ctx.fillStyle = '#F2EDE4';
+  ctx.font = `bold ${fs * 8.5}px Inter, sans-serif`;
+  ctx.fillText('Arjun Bose', avX, avY + avR + fs * 15);
+  ctx.fillStyle = 'rgba(255,255,255,0.38)';
+  ctx.font = `${fs * 7}px Inter, sans-serif`;
+  ctx.fillText('Engineering Manager', avX, avY + avR + fs * 26);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+  /* Round pill */
+  const pilW = fs * 64; const pilH = fs * 14;
+  const pilX = cardX + (cardW - pilW) / 2;
+  const pilY = cardY + cardH - fs * 22;
+  ctx.fillStyle = 'rgba(245,166,35,0.1)';
+  ctx.beginPath(); ctx.roundRect(pilX, pilY, pilW, pilH, pilH / 2); ctx.fill();
+  ctx.fillStyle = acc;
+  ctx.font = `${fs * 6.5}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('TECHNICAL SCREENING', pilX + pilW / 2, pilY + pilH / 2);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+  /* ── Main area (right of card) ── */
+  const mX = cardX + cardW + W * 0.035;
+  const mW = W - mX - W * 0.04;
+
+  /* State label */
+  const speaking = Math.sin(t * 1.8) > 0.1;
+  ctx.fillStyle = speaking ? acc : 'rgba(74,222,128,0.9)';
+  ctx.font = `${fs * 7.5}px JetBrains Mono, monospace`;
+  ctx.fillText(speaking ? '● INTERVIEWER SPEAKING' : '● YOUR TURN', mX, H * 0.21);
+
+  /* Q counter */
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.font = `${fs * 7.5}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText('Q 4 / 12', W - W * 0.04, H * 0.21);
+  ctx.textAlign = 'left';
+
+  /* Question text */
+  const question = 'Walk me through a project where you made a significant technical decision under time pressure. What was the trade-off?';
+  const words = question.split(' ');
+  const lineH2 = fs * 16;
+  ctx.fillStyle = '#F2EDE4';
+  ctx.font = `${fs * 10}px Inter, sans-serif`;
+  let line2 = '', lines2 = [];
+  words.forEach(w => {
+    const test = line2 + (line2 ? ' ' : '') + w;
+    if (ctx.measureText(test).width > mW * 0.94 && line2) { lines2.push(line2); line2 = w; }
+    else line2 = test;
+  });
+  if (line2) lines2.push(line2);
+  lines2.slice(0, 3).forEach((l, i) => ctx.fillText(l, mX, H * 0.30 + i * lineH2));
+
+  /* Waveform bars */
+  const wvY = H * 0.52; const wvH2 = H * 0.09;
+  const nbars = 30; const barW2 = (mW * 0.58) / (nbars * 1.65);
+  for (let i = 0; i < nbars; i++) {
+    const x = i / nbars;
+    let amp = speaking
+      ? Math.sin(x * Math.PI * 5 + t * 4) * 0.35 + Math.sin(x * Math.PI * 9 + t * 6.5) * 0.2 + 0.25
+      : Math.abs(Math.sin(x * 3 + t * 2.2)) * 0.12 + 0.04;
+    amp = Math.max(0.04, Math.min(1, amp));
+    const bh = wvH2 * amp;
+    const bx = mX + i * (barW2 * 1.65);
+    ctx.fillStyle = speaking
+      ? `rgba(245,166,35,${0.38 + amp * 0.62})`
+      : `rgba(74,222,128,${0.28 + amp * 0.55})`;
+    ctx.beginPath(); ctx.roundRect(bx, wvY + (wvH2 - bh) / 2, barW2, bh, barW2 / 2); ctx.fill();
+  }
+
+  /* User answer area */
+  const uY = H * 0.66;
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.beginPath(); ctx.roundRect(mX, uY, mW * 0.96, H * 0.17, 5); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.roundRect(mX, uY, mW * 0.96, H * 0.17, 5); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.font = `${fs * 8}px Inter, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText('So in my last role, we had a critical launch deadline...', mX + fs * 11, uY + H * 0.085);
+  ctx.textBaseline = 'alphabetic';
+
+  /* Transcript hint */
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.font = `${fs * 6.5}px JetBrains Mono, monospace`;
+  ctx.fillText('4 exchanges · scroll for transcript ↓', mX, H * 0.88);
+}
+
 function drawPageAutopsyScreen(ctx, W, H, t) {
   /* ── PageAutopsy — AI audit results page, laptop 16:10 ── */
   ctx.fillStyle = '#08080A';
@@ -2161,6 +2332,7 @@ function initProjectPreviews() {
     { id: 'preview-hero-laptop',  draw: drawCATalystScreen },
     { id: 'preview-hero-phone',   draw: drawGharKhataScreen },
     /* preview-catalyst replaced by <video catalyst.mp4> */
+    { id: 'preview-unscripted',   draw: drawUnscriptedScreen },
     { id: 'preview-gharkhata',    draw: drawGharKhataScreen },
     { id: 'preview-pitchready',   draw: drawPitchReadyScreen },
     /* preview-postroom replaced by <video postroom.mp4> */
